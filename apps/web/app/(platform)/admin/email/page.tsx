@@ -183,9 +183,14 @@ export default async function EmailSettingsPage({
             </div>
           </form>
           {current && (
-            <div style={{ marginTop: "0.75rem" }}>
+            <div style={{ marginTop: "0.75rem", display: "grid", gap: "0.75rem" }}>
               <form action="/api/admin/email/test" method="POST" style={{ display: "inline" }}>
                 <button type="submit">Test connection</button>
+              </form>
+              <form action="/api/admin/email/send-test" method="POST" style={{ display: "flex", gap: "0.5rem", alignItems: "end" }}>
+                <label style={{ flex: 1 }}>Send test email to
+                  <input name="to" type="email" required placeholder="name@example.com" style={input} /></label>
+                <button type="submit">Send</button>
               </form>
               <p><small style={{ color: "var(--muted)" }}>
                 {current.lastError
