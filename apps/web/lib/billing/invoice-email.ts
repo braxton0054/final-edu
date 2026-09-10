@@ -1,6 +1,3 @@
-import { readFile, access } from "node:fs/promises";
-import { join, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
 import { prisma } from "@mtanda/database";
 import { sendMail } from "@/lib/email/mailer";
 
@@ -14,31 +11,6 @@ export async function nextInvoiceNumber(): Promise<string> {
 
 function kes(n: number): string {
   return `KSh ${n.toLocaleString()}`;
-}
-
-async function logoAttachment() {
-  // Module-relative first (works in dev, prod, and scripts), cwd as fallback.
-  const candidates: string[] = [];
-  try {
-    const here = dirname(fileURLToPath(import.meta.url));
-    candidates.push(join(here, "..", "..", "public", "logo.png"));
-  } catch {
-    // import.meta unavailable — fall through to cwd
-  }
-  candidates.push(join(process.cwd(), "public", "logo.png"));
-  for (const p of candidates) {
-    try {
-      await access(p);
-      const content = await readFile(p);
-      if (content.length === 0) continue;
-      console.log(`[invoice-email] logo attached: ${p} (${content.length} bytes)`);
-      return [{ filename: "logo.png", content, cid: "mtanda-logo", contentType: "image/png" }];
-    } catch {
-      continue;
-    }
-  }
-  console.warn("[invoice-email] WARNING: logo.png not found, sending without logo");
-  return undefined;
 }
 
 // Emailed invoice for a new subscription (trial signup included).
@@ -60,7 +32,7 @@ export async function sendSubscriptionInvoice(opts: {
     html: `
       <div style="font-family:system-ui,sans-serif;max-width:560px;color:#101418">
         <div style="background:#101418;border-radius:12px 12px 0 0;padding:20px 24px">
-          <img src="cid:mtanda-logo" alt="MtandaoLabs" height="52" style="display:block" />
+          <div style="color:#ffffff;font-weight:800;font-size:1.2rem">MTANDAOLABS</div>
         </div>
         <div style="border:1px solid #e6e9ee;border-top:4px solid #f59e0b;border-radius:0 0 12px 12px;padding:20px 24px">
           <h2 style="margin:0 0 4px">Subscription invoice ${invoiceNo}</h2>
@@ -79,6 +51,6 @@ export async function sendSubscriptionInvoice(opts: {
           <a href="tel:+254728249135">+254 728 249135</a></p>
         </div>
       </div>`,
-    attachments: await logoAttachment(),
+    attachments: undefined,
   });
 }
