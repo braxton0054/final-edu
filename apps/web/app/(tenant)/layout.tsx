@@ -1,3 +1,6 @@
+// Tenant pages read live school data per request — never prerender.
+export const dynamic = "force-dynamic";
+
 export default function TenantLayout({
   children,
 }: {

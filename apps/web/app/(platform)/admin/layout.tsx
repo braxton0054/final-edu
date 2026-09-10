@@ -5,6 +5,9 @@ import { readSessionToken } from "@/lib/auth/session";
 import { AdminNav, AdminTopbar } from "./AdminNav";
 import "./admin.css";
 
+// Admin pages read live platform data per request — never prerender.
+export const dynamic = "force-dynamic";
+
 export default async function AdminLayout({
   children,
 }: {

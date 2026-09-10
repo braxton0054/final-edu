@@ -1,3 +1,6 @@
+// Auth flows read live data per request — never prerender.
+export const dynamic = "force-dynamic";
+
 export default function AuthLayout({
   children,
 }: {

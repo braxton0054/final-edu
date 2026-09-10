@@ -68,7 +68,7 @@ export async function payheroStkPush(
   return call(cfg, "/payments", {
     amount: Math.round(opts.amount),
     phone_number: toMsisdn(opts.phone),
-    channel_id: Number(opts.channelId),
+    channel_id: Number(cfg.channelId),
     provider: "m-pesa",
     external_reference: opts.externalRef,
     customer_name: opts.customerName,
