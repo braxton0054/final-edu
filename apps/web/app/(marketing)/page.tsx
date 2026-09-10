@@ -1,7 +1,22 @@
 import SiteLogo from "../components/SiteLogo";
 import ThemeToggle from "../components/ThemeToggle";
+import { prisma } from "@mtanda/database";
 
-export default function MarketingHome() {
+async function trialDays(): Promise<number> {
+  try {
+    const plans = await prisma.subscriptionPlan.findMany({
+      where: { active: true },
+      select: { trialDays: true },
+    });
+    if (plans.length === 0) return 90;
+    return Math.min(...plans.map((p) => p.trialDays));
+  } catch {
+    return 90; // build-time fallback (no DB while prerendering)
+  }
+}
+
+export default async function MarketingHome() {
+  const trial = await trialDays();
   return (
     <div className="lp">
       {/* ---------- Nav ---------- */}
@@ -367,6 +382,9 @@ export default function MarketingHome() {
             <span className="lp-eyebrow">Pricing</span>
             <h2 className="lp-h2">Simple plans that grow with your school</h2>
             <p className="lp-lead">Plans can change — pick a starting point.</p>
+            <p className="lp-lead" style={{ fontWeight: 700, color: "var(--brand-accent-dark)" }}>
+              Start with a {trial}-day free trial on every plan.
+            </p>
           </div>
           <div className="lp-pricing">
             <div className="lp-plan">
