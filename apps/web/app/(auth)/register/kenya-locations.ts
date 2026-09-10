@@ -20,7 +20,7 @@ export const KENYA_COUNTIES: KenyaCounty[] = [
   { name: 'Kiambu', postal: '00900', towns: ['Kiambu', 'Thika', 'Ruiru', 'Kikuyu', 'Limuru', 'Juja', 'Gatundu'], subs: ['Gatundu North', 'Gatundu South', 'Githunguri', 'Juja', 'Kabete', 'Kiambaa', 'Kiambu', 'Kikuyu', 'Lari', 'Limuru', 'Ruiru', 'Thika Town'] },
   { name: 'Kilifi', postal: '80108', towns: ['Kilifi', 'Malindi', 'Watamu', 'Mariakani', 'Mtwapa', 'Kaloleni'], subs: ['Genzw', 'Kaloleni', 'Kilifi North', 'Kilifi South', 'Magarini', 'Malindi', 'Rabai'] },
   { name: 'Kirinyaga', postal: '10304', towns: ['Kerugoya', 'Kagio', 'Sagana', 'Kutus', 'Wanguru'], subs: ['Kirinyaga Central', 'Kirinyaga East', 'Kirinyaga West', 'Mwea East', 'Mwea West'] },
-  { name: 'Kisii', postal: '40200', towns: ['Kisii', 'Ogembo', 'Nyamache', 'Suneka', 'Keroka'], subs: [] },
+  { name: 'Kisii', postal: '40200', towns: ['Kisii', 'Ogembo', 'Nyamache', 'Suneka', 'Keroka'], subs: ['Bobasi', 'Bomachoge Borabu', 'Bomachoge Chache', 'Bonchari', 'Kitutu Chache North', 'Kitutu Chache South', 'Nyaribari Chache', 'Nyaribari Masaba', 'South Mugirango'] },
   { name: 'Kisumu', postal: '40100', towns: ['Kisumu', 'Ahero', 'Maseno', 'Kombewa', 'Muhoroni'], subs: ['Kisumu Central', 'Kisumu East', 'Kisumu West', 'Mohoroni', 'Nyakach', 'Nyando', 'Seme'] },
   { name: 'Kitui', postal: '90200', towns: ['Kitui', 'Mwingi', 'Mutomo', 'Kabati'], subs: ['Ikutha', 'Katulani', 'Kisasi', 'Kitui Central', 'Kitui West', 'Lower Yatta', 'Matiyani', 'Migwani', 'Mutitu', 'Mutomo', 'Muumonikyusu', 'Mwingi Central', 'Mwingi East', 'Nzambani', 'Tseikuru'] },
   { name: 'Kwale', postal: '80403', towns: ['Kwale', 'Ukunda', 'Diani', 'Msambweni', 'Kinango', 'Lunga Lunga'], subs: ['Kinango', 'Lungalunga', 'Msambweni', 'Mutuga'] },
