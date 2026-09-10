@@ -112,13 +112,17 @@ export default async function EmailSettingsPage({
               <>
                 <div className="reg-review">
                   <div className="reg-review-row"><span>Server name</span><span><code>smtp.zeptomail.com</code></span></div>
-                  <div className="reg-review-row"><span>Username</span><span><code>emailapikey</code></span></div>
                 </div>
                 <label>Port number &amp; Authentication
                   <select name="port" defaultValue={current?.port ?? 587} style={input}>
                     <option value={587}>587 (TLS)</option>
                     <option value={465}>465 (SSL)</option>
                   </select></label>
+                <label>Username *
+                  <input name="username" required defaultValue={current?.username ?? "emailapikey"} style={input} /></label>
+                <p style={{ margin: "-0.4rem 0 0" }}>
+                  <small style={{ color: "var(--muted)" }}>Default <code>emailapikey</code>. Shorter passwords need the generated username value or the From address instead.</small>
+                </p>
                 <label>Domain / Sender Address *
                   <input name="fromEmail" type="text" required defaultValue={current?.fromEmail ?? ""} style={input}
                     placeholder="mtandaolabs.com or name@mtandaolabs.com" /></label>

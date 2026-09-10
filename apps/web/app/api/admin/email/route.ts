@@ -24,7 +24,11 @@ export async function POST(request: Request) {
   const provider = String(form.get("provider") ?? "smtp");
   const preset = PRESETS[provider] ?? PRESETS.smtp;
   const host = preset.host ?? String(form.get("host") ?? "").trim();
-  const username = preset.userFixed ?? String(form.get("username") ?? "").trim();
+  const typedUsername = String(form.get("username") ?? "").trim();
+  // ZeptoMail: emailapikey by default, but shorter passwords require the
+  // generated username value or the From address instead.
+  const username =
+    preset.userFixed && !typedUsername ? preset.userFixed : typedUsername || preset.userFixed || "";
   const fromRaw = String(form.get("fromEmail") ?? "").trim().toLowerCase();
   // Accept a bare domain (mtandaolabs.com) or full address (a@b.com).
   // Bare domain sends as noreply@domain.
