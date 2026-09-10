@@ -107,46 +107,69 @@ export default async function EmailSettingsPage({
           </div>
           <form action="/api/admin/email" method="POST" style={{ display: "grid", gap: "0.9rem" }}>
             <input type="hidden" name="provider" value={provider} />
-            {preset.userFixed && (
-              <p style={{ margin: 0 }}>
-                <small style={{ color: "var(--muted)" }}>
-                  Username is fixed to <code>{preset.userFixed}</code> by {preset.label}.
-                </small>
-              </p>
-            )}
-            <label>{preset.passHint} *
-              <input name="password" type="password" autoComplete="new-password"
-                placeholder={current ? "(stored — blank keeps it)" : ""} style={input} /></label>
-            {!preset.userFixed && (
-              <label>{preset.userHint} *
-                <input name="username" required defaultValue={current?.username ?? ""} style={input} /></label>
-            )}
-            {provider === "smtp" && (
+            {provider === "zeptomail" ? (
               <>
-                <label>Host *
-                  <input name="host" required defaultValue={current?.host ?? ""} style={input} /></label>
+                <div className="reg-review">
+                  <div className="reg-review-row"><span>Server name</span><span><code>smtp.zeptomail.com</code></span></div>
+                  <div className="reg-review-row"><span>Username</span><span><code>emailapikey</code></span></div>
+                </div>
+                <label>Port number &amp; Authentication
+                  <select name="port" defaultValue={current?.port ?? 587} style={input}>
+                    <option value={587}>587 (TLS)</option>
+                    <option value={465}>465 (SSL)</option>
+                  </select></label>
+                <label>Domain / Sender Address *
+                  <input name="fromEmail" type="email" required defaultValue={current?.fromEmail ?? ""} style={input} /></label>
+                <label>Password 1 *
+                  <input name="password" type="password" autoComplete="new-password"
+                    placeholder={current ? "(stored — blank keeps it)" : ""} style={input} /></label>
+                <label>From name
+                  <input name="fromName" defaultValue={current?.fromName ?? "MtandaoLabs"} style={input} /></label>
+              </>
+            ) : (
+              <>
+                {preset.userFixed && (
+                  <p style={{ margin: 0 }}>
+                    <small style={{ color: "var(--muted)" }}>
+                      Username is fixed to <code>{preset.userFixed}</code> by {preset.label}.
+                    </small>
+                  </p>
+                )}
+                <label>{preset.passHint} *
+                  <input name="password" type="password" autoComplete="new-password"
+                    placeholder={current ? "(stored — blank keeps it)" : ""} style={input} /></label>
+                {!preset.userFixed && (
+                  <label>{preset.userHint} *
+                    <input name="username" required defaultValue={current?.username ?? ""} style={input} /></label>
+                )}
+                {provider === "smtp" && (
+                  <>
+                    <label>Host *
+                      <input name="host" required defaultValue={current?.host ?? ""} style={input} /></label>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.9rem" }}>
+                      <label>Port *
+                        <input name="port" type="number" required defaultValue={current?.port ?? 587} style={input} /></label>
+                      <label style={{ alignSelf: "end" }}>
+                        <input type="checkbox" name="secure" defaultChecked={current?.secure ?? false} /> Port 465 TLS
+                      </label>
+                    </div>
+                  </>
+                )}
+                {provider !== "smtp" && (
+                  <label>Port
+                    <select name="port" defaultValue={current?.port ?? 587} style={input}>
+                      <option value={587}>587 (TLS)</option>
+                      <option value={465}>465 (SSL)</option>
+                    </select></label>
+                )}
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.9rem" }}>
-                  <label>Port *
-                    <input name="port" type="number" required defaultValue={current?.port ?? 587} style={input} /></label>
-                  <label style={{ alignSelf: "end" }}>
-                    <input type="checkbox" name="secure" defaultChecked={current?.secure ?? false} /> Port 465 TLS
-                  </label>
+                  <label>From email * <small>({preset.fromHint})</small>
+                    <input name="fromEmail" type="email" required defaultValue={current?.fromEmail ?? ""} style={input} /></label>
+                  <label>From name
+                    <input name="fromName" defaultValue={current?.fromName ?? "MtandaoLabs"} style={input} /></label>
                 </div>
               </>
             )}
-            {provider !== "smtp" && (
-              <label>Port
-                <select name="port" defaultValue={current?.port ?? 587} style={input}>
-                  <option value={587}>587 (TLS)</option>
-                  <option value={465}>465 (SSL)</option>
-                </select></label>
-            )}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.9rem" }}>
-              <label>From email * <small>({preset.fromHint})</small>
-                <input name="fromEmail" type="email" required defaultValue={current?.fromEmail ?? ""} style={input} /></label>
-              <label>From name
-                <input name="fromName" defaultValue={current?.fromName ?? "MtandaoLabs"} style={input} /></label>
-            </div>
             <div>
               <label><input type="checkbox" name="active" defaultChecked={current?.active ?? true} /> Enabled</label>
             </div>
