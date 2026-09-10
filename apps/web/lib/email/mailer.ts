@@ -50,8 +50,22 @@ export async function verifySmtp(): Promise<{ ok: boolean; error?: string }> {
     await transporter(cfg).verify();
     return { ok: true };
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : "SMTP check failed." };
+    return { ok: false, error: fullSmtpError(e) };
   }
+}
+
+// Nodemailer truncates server replies — include the full SMTP response
+// (it usually names the real cause: bad password, IP block, etc.).
+function fullSmtpError(e: unknown): string {
+  if (!(e instanceof Error)) return "SMTP check failed.";
+  const response = (e as { response?: unknown }).response;
+  const code = (e as { responseCode?: unknown }).responseCode;
+  const parts = [e.message];
+  if (code !== undefined) parts.push(`code=${String(code)}`);
+  if (typeof response === "string" && response && !e.message.includes(response)) {
+    parts.push(`server: ${response}`);
+  }
+  return parts.join(" ").slice(0, 500);
 }
 
 export async function sendMail(opts: {
@@ -70,6 +84,6 @@ export async function sendMail(opts: {
     });
     return { ok: true };
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : "Send failed." };
+    return { ok: false, error: fullSmtpError(e) };
   }
 }
