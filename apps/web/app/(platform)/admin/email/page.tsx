@@ -28,8 +28,8 @@ const PROVIDERS: Record<
     host: "smtp.zeptomail.com",
     userFixed: "emailapikey",
     userHint: "Fixed: emailapikey",
-    passHint: "Password 1 (Agents → SMTP/API → SMTP tab)",
-    fromHint: "@mtandaolabs.com sender",
+    passHint: "Password from Agents → SMTP/API → SMTP tab",
+    fromHint: "Verified sender address on that agent",
   },
   resend: {
     label: "Resend",
