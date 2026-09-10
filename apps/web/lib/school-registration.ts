@@ -146,6 +146,13 @@ export async function registerSchool(input: SchoolRegistrationInput) {
   const token = randomBytes(32).toString("hex");
   const tokenExpiry = new Date(now.getTime() + 24 * 60 * 60 * 1000);
 
+  // Sequential invoice number (unique constraint guards the rare race).
+  const year = now.getFullYear();
+  const invoiceCount = await prisma.platformInvoice.count({
+    where: { number: { startsWith: `ML-${year}-` } },
+  });
+  const invoiceNo = `ML-${year}-${String(invoiceCount + 1).padStart(4, "0")}`;
+
   const school = await prisma.$transaction(async (tx) => {
     const created = await tx.school.create({
       data: {
@@ -231,6 +238,7 @@ export async function registerSchool(input: SchoolRegistrationInput) {
 
     await tx.platformInvoice.create({
       data: {
+        number: invoiceNo,
         schoolId: created.id,
         subscriptionId: subscription.id,
         amount: plan.quarterlyPrice,
@@ -272,7 +280,15 @@ export async function registerSchool(input: SchoolRegistrationInput) {
     return created;
   });
 
-  // TODO: send verification email via queued job. In development the token
-  // is surfaced so the flow can be completed without SMTP.
-  return { schoolId: school.id, slug: school.slug, subdomain, verificationToken: token };
+  return {
+    schoolId: school.id,
+    slug: school.slug,
+    subdomain,
+    verificationToken: token,
+    invoiceNo,
+    planName: plan.name,
+    planAmount: Number(plan.quarterlyPrice),
+    trialDays: plan.trialDays,
+    trialEnd,
+  };
 }

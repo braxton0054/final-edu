@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { registerSchool } from "@/lib/school-registration";
 import { sendMail } from "@/lib/email/mailer";
 import { issueOtp } from "@/lib/auth/otp";
+import { sendSubscriptionInvoice } from "@/lib/billing/invoice-email";
 import { checkRateLimit, clientIp } from "@/lib/rate-limit";
 
 const str = (v: unknown) => String(v ?? "");
@@ -96,6 +97,19 @@ export async function POST(request: Request) {
       html: `<p>Your school <strong>${result.slug}</strong> is registered.</p><p>Your confirmation code is <strong style="font-size:1.4rem">${code}</strong> (expires in 10 minutes).</p><p>Enter it at ${base}/verify-email, or <a href="${base}/verify-email?token=${result.verificationToken}">click here to verify instantly</a>.</p>`,
     });
     response.emailSent = mailed.ok;
+    // Subscription invoice to the school email (trial signup included).
+    const invoiced = await sendSubscriptionInvoice({
+      to: email,
+      schoolName: String(body.schoolName ?? result.slug),
+      invoiceNo: result.invoiceNo,
+      planName: result.planName,
+      amount: result.planAmount,
+      trialDays: result.trialDays,
+      trialEnd: new Date(result.trialEnd),
+      payUrl: `${base}/register/payment/${result.schoolId}`,
+    });
+    response.invoiceSent = invoiced.ok;
+    response.invoiceNo = result.invoiceNo;
     // Development fallback: surface the link when no SMTP is configured.
     if (!mailed.ok && process.env.NODE_ENV !== "production") {
       response.verifyUrl = `/verify-email?token=${result.verificationToken}`;

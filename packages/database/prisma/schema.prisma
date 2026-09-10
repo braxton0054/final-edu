@@ -334,6 +334,7 @@ model Subscription {
 
 model PlatformInvoice {
   id             String        @id @default(cuid())
+  number         String        @unique // e.g. ML-2026-0001
   schoolId       String
   school         School        @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   subscriptionId String?
