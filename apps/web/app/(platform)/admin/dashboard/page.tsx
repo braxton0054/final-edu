@@ -52,7 +52,7 @@ export default async function AdminDashboard() {
             <div className="value">{users}</div>
           </div>
           <div className="admin-card">
-            <div className="label">Revenue this quarter</div>
+            <div className="label">Revenue (last 3 months)</div>
             <div className="value">KSh {Number(revenue._sum.amount ?? 0).toLocaleString()}</div>
           </div>
           <div className="admin-card">

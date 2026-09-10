@@ -470,7 +470,7 @@ export default function RegisterForm({ initialPlan }: { initialPlan?: string }) 
                       {plans.map((p) => (
                         <div key={p.slug} className={form.planSlug === p.slug ? "reg-radio-card on" : "reg-radio-card"} onClick={() => set("planSlug", p.slug)}>
                           <strong>{p.name}</strong>
-                          <small>{p.quarterlyPrice === 0 ? "Custom pricing" : `KSh ${p.quarterlyPrice.toLocaleString()}/quarter`} · {p.minStudents}–{p.maxStudents ?? "+"} students</small>
+                          <small>{p.quarterlyPrice === 0 ? "Custom pricing" : `KSh ${p.quarterlyPrice.toLocaleString()}/3 months`} · {p.minStudents}–{p.maxStudents ?? "+"} students</small>
                         </div>
                       ))}
                     </div></div>
@@ -516,7 +516,7 @@ export default function RegisterForm({ initialPlan }: { initialPlan?: string }) 
                       <div className="reg-review-row"><span>Location</span><span>{form.town}, {form.subCounty}, {form.county}</span></div>
                       <div className="reg-review-row"><span>Academics</span><span>{form.curriculum} · {form.levelsOffered.length} levels · {form.academicYear} · {form.currentTerm}</span></div>
                       <div className="reg-review-row"><span>School URL</span><span>{form.subdomain || "—"}.mtandaolabsedu.com</span></div>
-                      <div className="reg-review-row"><span>Plan</span><span>{selectedPlan ? `${selectedPlan.name} — KSh ${selectedPlan.quarterlyPrice.toLocaleString()}/quarter` : form.planSlug}</span></div>
+                      <div className="reg-review-row"><span>Plan</span><span>{selectedPlan ? `${selectedPlan.name} — KSh ${selectedPlan.quarterlyPrice.toLocaleString()}/3 months` : form.planSlug}</span></div>
                     </div></div>
                   <label className="reg-legal"><input type="checkbox" checked={form.authorizedConfirm} onChange={(e) => set("authorizedConfirm", e.target.checked)} /> I confirm that I am authorized to register this school *</label>
                   <label className="reg-legal"><input type="checkbox" checked={form.acceptTerms} onChange={(e) => set("acceptTerms", e.target.checked)} /> I agree to the Terms of Service *</label>

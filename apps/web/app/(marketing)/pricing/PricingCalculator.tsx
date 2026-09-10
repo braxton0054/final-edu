@@ -29,8 +29,8 @@ export default function PricingCalculator({ plans }: { plans: PlanInfo[] }) {
   const calc = useMemo(() => {
     const plan = planFor(students, plans);
     const monthly = students * parentFee;
-    const quarterly = monthly * 3;
-    return { plan, monthly, quarterly, retains: quarterly - plan.quarterlyPrice };
+    const threeMonth = monthly * 3;
+    return { plan, monthly, threeMonth, retains: threeMonth - plan.quarterlyPrice };
   }, [students, parentFee, plans]);
 
   return (
@@ -69,16 +69,16 @@ export default function PricingCalculator({ plans }: { plans: PlanInfo[] }) {
           <span>KSh {calc.monthly.toLocaleString()}/month</span>
         </div>
         <div className="lp-report-row">
-          <span>Estimated quarterly collection</span>
-          <span>KSh {calc.quarterly.toLocaleString()}</span>
+          <span>Estimated 3-month collection</span>
+          <span>KSh {calc.threeMonth.toLocaleString()}</span>
         </div>
         <div className="lp-report-row">
           <span>MtandaoLabsEdu ({calc.plan.name})</span>
-          <span>KSh {calc.plan.quarterlyPrice.toLocaleString()}/quarter</span>
+          <span>KSh {calc.plan.quarterlyPrice.toLocaleString()}/3 months</span>
         </div>
         <div className="lp-report-row">
           <span>School retains*</span>
-          <span>KSh {calc.retains.toLocaleString()}/quarter</span>
+          <span>KSh {calc.retains.toLocaleString()}/3 months</span>
         </div>
       </div>
       <p>

@@ -41,7 +41,7 @@ export default async function PlansPage() {
         <div className="admin-panel">
           <table className="admin-table">
             <thead>
-              <tr><th>Plan</th><th>Quarterly (KSh)</th><th>Min</th><th>Max</th><th>Grace</th><th>Trial (days)</th><th>Schools</th><th>Active</th><th></th></tr>
+              <tr><th>Plan</th><th>Price / 3 mo (KSh)</th><th>Min</th><th>Max</th><th>Grace</th><th>Trial (days)</th><th>Schools</th><th>Active</th><th></th></tr>
             </thead>
             <tbody>
               {plans.map((p) => {

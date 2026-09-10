@@ -26,7 +26,7 @@ export default async function PricingPage() {
         <span className="lp-eyebrow">Pricing</span>
         <h1 className="lp-h2">Simple plans that grow with your school</h1>
         <p className="lp-lead">
-          Per quarter, per school. Every plan includes a 3-month free trial.
+          Per 3 months, per school. Every plan includes a 3-month free trial.
           Parent service fees are set by each school, not by us.
         </p>
 
@@ -38,7 +38,7 @@ export default async function PricingPage() {
                 {p.quarterlyPrice === 0 ? "Custom" : `KSh ${p.quarterlyPrice.toLocaleString()}`}
               </p>
               <p style={{ color: "#5b6470", fontSize: "0.9rem" }}>
-                per quarter · {p.minStudents.toLocaleString()}–
+                per 3 months · {p.minStudents.toLocaleString()}–
                 {p.maxStudents ? p.maxStudents.toLocaleString() : "+"} students
               </p>
               <p style={{ color: "var(--brand-accent-dark)", fontSize: "0.9rem", fontWeight: 700 }}>
