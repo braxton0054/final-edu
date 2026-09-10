@@ -11,7 +11,8 @@
     "db:generate": "pnpm --filter @mtanda/database db:generate",
     "db:migrate": "pnpm --filter @mtanda/database db:migrate",
     "db:seed": "pnpm --filter @mtanda/database db:seed",
-    "db:studio": "pnpm --filter @mtanda/database db:studio"
+    "db:studio": "pnpm --filter @mtanda/database db:studio",
+    "postinstall": "pnpm db:generate"
   },
   "devDependencies": {
     "turbo": "^2.5.0",
@@ -24,9 +25,15 @@
   },
   "pnpm": {
     "supportedArchitectures": {
-      "os": ["linux"],
-      "cpu": ["x64"],
-      "libc": ["glibc"]
+      "os": [
+        "linux"
+      ],
+      "cpu": [
+        "x64"
+      ],
+      "libc": [
+        "glibc"
+      ]
     }
   }
 }
