@@ -1,5 +1,14 @@
 import { prisma } from "@mtanda/database";
-import PricingCalculator, { type PlanInfo } from "./PricingCalculator";
+
+type PlanInfo = {
+  slug: string;
+  name: string;
+  quarterlyPrice: number;
+  minStudents: number;
+  maxStudents: number | null;
+  trialDays: number;
+  features: string[] | null;
+};
 
 // Live plan prices — never prerender.
 export const dynamic = "force-dynamic";
@@ -27,7 +36,6 @@ export default async function PricingPage() {
         <h1 className="lp-h2">Simple plans that grow with your school</h1>
         <p className="lp-lead">
           Per 3 months, per school. Every plan includes a 3-month free trial.
-          Parent service fees are set by each school, not by us.
         </p>
 
         <div className="lp-pricing">
@@ -58,8 +66,6 @@ export default async function PricingPage() {
             </div>
           ))}
         </div>
-
-        <PricingCalculator plans={plans} />
       </div>
     </div>
   );
