@@ -1,5 +1,6 @@
-import { readFile } from "node:fs/promises";
-import { join } from "node:path";
+import { readFile, access } from "node:fs/promises";
+import { join, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 import { prisma } from "@mtanda/database";
 import { sendMail } from "@/lib/email/mailer";
 
@@ -16,12 +17,28 @@ function kes(n: number): string {
 }
 
 async function logoAttachment() {
+  // Module-relative first (works in dev, prod, and scripts), cwd as fallback.
+  const candidates: string[] = [];
   try {
-    const content = await readFile(join(process.cwd(), "public", "logo.png"));
-    return [{ filename: "logo.png", content, cid: "mtanda-logo", contentType: "image/png" }];
+    const here = dirname(fileURLToPath(import.meta.url));
+    candidates.push(join(here, "..", "..", "public", "logo.png"));
   } catch {
-    return undefined;
+    // import.meta unavailable — fall through to cwd
   }
+  candidates.push(join(process.cwd(), "public", "logo.png"));
+  for (const p of candidates) {
+    try {
+      await access(p);
+      const content = await readFile(p);
+      if (content.length === 0) continue;
+      console.log(`[invoice-email] logo attached: ${p} (${content.length} bytes)`);
+      return [{ filename: "logo.png", content, cid: "mtanda-logo", contentType: "image/png" }];
+    } catch {
+      continue;
+    }
+  }
+  console.warn("[invoice-email] WARNING: logo.png not found, sending without logo");
+  return undefined;
 }
 
 // Emailed invoice for a new subscription (trial signup included).
