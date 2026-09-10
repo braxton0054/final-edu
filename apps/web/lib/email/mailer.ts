@@ -34,6 +34,8 @@ function transporter(cfg: SmtpConfig) {
     host: cfg.host,
     port: cfg.port,
     secure: cfg.secure,
+    // ZeptoMail mandates TLS on 587 — enforce the upgrade.
+    requireTLS: cfg.host === "smtp.zeptomail.com" && !cfg.secure,
     auth: { user: cfg.username, pass: cfg.password },
     connectionTimeout: 15000,
     greetingTimeout: 15000,
