@@ -26,11 +26,13 @@ export async function sendSubscriptionInvoice(opts: {
   payUrl: string;
 }): Promise<{ ok: boolean; error?: string }> {
   const { to, schoolName, invoiceNo, planName, amount, trialDays, trialEnd, payUrl } = opts;
+  const logo = `${new URL(payUrl).origin}/logo.png`;
   return sendMail({
     to,
     subject: `Your MtandaoLabs invoice ${invoiceNo} — ${schoolName}`,
     html: `
       <div style="font-family:system-ui,sans-serif;max-width:560px">
+        <img src="${logo}" alt="MtandaoLabs" height="56" style="display:block;margin-bottom:12px" />
         <h2>Subscription invoice ${invoiceNo}</h2>
         <p>Hello ${schoolName},</p>
         <p>Your <strong>${planName}</strong> subscription is registered with a
@@ -41,7 +43,10 @@ export async function sendSubscriptionInvoice(opts: {
         </table>
         <p>Pay by M-Pesa any time before the trial ends to stay active:</p>
         <p><a href="${payUrl}">Continue to Payment →</a></p>
-        <p style="color:#666"><small>MtandaoLabsEdu · mtandaolabs@gmail.com · +254 728 249135</small></p>
+        <hr style="border:none;border-top:1px solid #ddd" />
+        <p><strong>MtandaoLabsEdu</strong><br />
+        <a href="mailto:mtandaolabs@gmail.com">mtandaolabs@gmail.com</a><br />
+        <a href="tel:+254728249135">+254 728 249135</a></p>
       </div>`,
   });
 }
