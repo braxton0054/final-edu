@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { registerSchool } from "@/lib/school-registration";
 import { sendMail } from "@/lib/email/mailer";
+import { issueOtp } from "@/lib/auth/otp";
+import { checkRateLimit, clientIp } from "@/lib/rate-limit";
 
 const str = (v: unknown) => String(v ?? "");
 const num = (v: unknown) => {
@@ -10,6 +12,13 @@ const num = (v: unknown) => {
 
 // Self-registration: 7-step CBC wizard → email verification → payment → tenant.
 export async function POST(request: Request) {
+  const rl = await checkRateLimit(`rl:register:${clientIp(request)}`, 5, 3600);
+  if (!rl.ok) {
+    return NextResponse.json(
+      { ok: false, error: "Too many registrations. Try again later." },
+      { status: 429 }
+    );
+  }
   try {
     const body = await request.json();
     const levels = Array.isArray(body.levelsOffered)
@@ -75,14 +84,16 @@ export async function POST(request: Request) {
         request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? undefined,
     });
     const response: Record<string, unknown> = { ok: true, ...result };
-    // Real verification email via the configured platform SMTP.
+    // Email confirmation: 6-digit OTP code + verification link.
+    const email = String(body.email ?? "");
+    const { code } = await issueOtp(email, "verify");
     const base =
       process.env.NEXT_PUBLIC_APP_URL ??
       `${new URL(request.url).protocol}//${new URL(request.url).host}`;
     const mailed = await sendMail({
-      to: String(body.email ?? ""),
-      subject: "Verify your MtandaoLabs school account",
-      html: `<p>Your school <strong>${result.slug}</strong> is registered.</p><p><a href="${base}/verify-email?token=${result.verificationToken}">Verify your email to activate it</a> (link expires in 24 hours).</p>`,
+      to: email,
+      subject: "Confirm your MtandaoLabs email address",
+      html: `<p>Your school <strong>${result.slug}</strong> is registered.</p><p>Your confirmation code is <strong style="font-size:1.4rem">${code}</strong> (expires in 10 minutes).</p><p>Enter it at ${base}/verify-email, or <a href="${base}/verify-email?token=${result.verificationToken}">click here to verify instantly</a>.</p>`,
     });
     response.emailSent = mailed.ok;
     // Development fallback: surface the link when no SMTP is configured.

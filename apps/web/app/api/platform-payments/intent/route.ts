@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@mtanda/database";
 import { getDarajaConfig, darajaStkPush, toMsisdn } from "@/lib/payments/daraja";
 import { getPayHeroConfig, payheroStkPush } from "@/lib/payments/payhero";
+import { checkRateLimit, clientIp } from "@/lib/rate-limit";
 
 // Real STK push for a school's subscription invoice.
 // Uses the active provider (Daraja preferred, PayHero fallback) with the
@@ -15,6 +16,14 @@ export async function POST(request: Request) {
     return NextResponse.json(
       { ok: false, error: "School and a valid phone number are required." },
       { status: 400 }
+    );
+  }
+
+  const rl = await checkRateLimit(`rl:stk:${clientIp(request)}:${schoolId}`, 5, 600);
+  if (!rl.ok) {
+    return NextResponse.json(
+      { ok: false, error: "Too many payment attempts. Wait a few minutes (also protects against provider blocks)." },
+      { status: 429 }
     );
   }
 

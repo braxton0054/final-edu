@@ -45,6 +45,9 @@ export default function LoginForm() {
         style={{ width: "100%", marginTop: "0.5rem" }}>
         {busy ? "Signing in…" : "Sign in"}
       </button>
+      <p style={{ marginTop: "1rem", textAlign: "center" }}>
+        <a href="/forgot-password">Forgot password?</a>
+      </p>
     </form>
   );
 }

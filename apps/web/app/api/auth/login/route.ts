@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@mtanda/database";
 import { verifyPassword } from "@/lib/auth/passwords";
 import { createSessionToken, SESSION_COOKIE, SESSION_MAX_AGE } from "@/lib/auth/session";
+import { checkRateLimit, clientIp, rateLimitHeaders } from "@/lib/rate-limit";
 
 function landingFor(userType: string): string {
   if (userType === "PLATFORM_ADMIN") return "/admin/dashboard";
@@ -12,6 +13,14 @@ export async function POST(request: Request) {
   const body = await request.json().catch(() => ({}));
   const email = String(body.email ?? "").toLowerCase().trim();
   const password = String(body.password ?? "");
+
+  const rl = await checkRateLimit(`rl:login:${clientIp(request)}:${email}`, 10, 60);
+  if (!rl.ok) {
+    return NextResponse.json(
+      { ok: false, error: "Too many attempts. Try again in a minute." },
+      { status: 429, headers: rateLimitHeaders(rl.remaining, 10) }
+    );
+  }
 
   const user = await prisma.user.findFirst({
     where: { email },
