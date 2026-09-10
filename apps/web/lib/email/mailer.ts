@@ -1,4 +1,4 @@
-import nodemailer from "nodemailer";
+import nodemailer, { type Attachment } from "nodemailer";
 import { prisma } from "@mtanda/database";
 import { decryptSecret } from "@/lib/auth/encryption";
 
@@ -72,6 +72,7 @@ export async function sendMail(opts: {
   to: string;
   subject: string;
   html: string;
+  attachments?: Attachment[];
 }): Promise<{ ok: boolean; error?: string }> {
   const cfg = await getSmtpConfig();
   if (!cfg) return { ok: false, error: "No active email settings." };
@@ -81,6 +82,7 @@ export async function sendMail(opts: {
       to: opts.to,
       subject: opts.subject,
       html: opts.html,
+      attachments: opts.attachments,
     });
     return { ok: true };
   } catch (e) {
