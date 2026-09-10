@@ -63,6 +63,7 @@ export async function payheroStkPush(
     externalRef: string;
     customerName?: string;
     callbackUrl?: string;
+    channelId?: string | number;
   }
 ): Promise<{ reference: string; checkoutRequestId?: string; status: string }> {
   return call(cfg, "/payments", {

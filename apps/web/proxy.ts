@@ -9,11 +9,11 @@ type Claim = {
   exp: number;
 };
 
-function b64urlToBytes(s: string): Uint8Array {
+function b64urlToBytes(s: string): Uint8Array<ArrayBuffer> {
   const bin = atob(s.replace(/-/g, "+").replace(/_/g, "/"));
   const bytes = new Uint8Array(bin.length);
   for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-  return bytes;
+  return bytes.slice();
 }
 
 // Fully verifies the HMAC-signed session cookie (not forgeable).
