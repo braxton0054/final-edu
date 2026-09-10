@@ -1,0 +1,451 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Multi-tenancy: shared database, shared schema, schoolId on every tenant table.
+// RLS policies are applied in SQL migrations (see packages/database/prisma/migrations).
+
+enum SchoolStatus {
+  PENDING_VERIFICATION
+  TRIAL
+  ACTIVE
+  SUSPENDED
+  ARCHIVED
+}
+
+enum SubscriptionStatus {
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  EXPIRED
+}
+
+enum PlatformPaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum UserType {
+  PLATFORM_ADMIN
+  SCHOOL_ADMIN
+  TEACHER
+  PARENT
+  STAFF
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PARTIALLY_PAID
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+enum PaymentMethod {
+  MPESA
+  CASH
+  BANK
+  MANUAL
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REVERSED
+}
+
+model School {
+  id        String       @id @default(cuid())
+  name      String
+  slug      String       @unique
+  domain    String?      @unique
+  subdomain String?      @unique
+  status    SchoolStatus @default(PENDING_VERIFICATION)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  // Step 2 — school information (Kenya MoE-aligned, minimal at signup)
+  schoolType      String? // Primary School | Junior School | Senior School | combos | Other
+  ownership       String? // Private | Public | Faith-Based | Community | NGO | Other
+  email           String?
+  phone           String?
+  alternativePhone String?
+  admissionsEmail String?
+  financeEmail    String?
+  whatsappNumber  String?
+  website         String?
+  regNumber       String? // official registration number (optional at signup)
+  knecCode        String?
+  kraPin          String?
+
+  // Step 3 — location
+  county        String?
+  subCounty     String?
+  town          String?
+  ward          String?
+  location      String?
+  address       String?
+  postalAddress String?
+  postalCode    String?
+
+  // Step 4 — CBC setup (defaults, refined during onboarding)
+  curriculum        String? // CBC first; others later
+  levelsOffered     Json? // configurable list, not hard-coded
+  academicYear      String?
+  currentTerm       String?
+  termStartDate     DateTime?
+  termEndDate       DateTime?
+  estimatedStudents Int?
+  estimatedTeachers Int?
+  estimatedClasses  Int?
+  estimatedStreams  Int?
+
+  // Step 5 — branding (tenant identity)
+  motto             String?
+  shortName         String?
+  description       String?
+  logoUrl           String?
+  primaryColor      String?
+  secondaryColor    String?
+  reportCardPreference String? // default-template | custom-later
+  studentIdFormat   String?   @default("automatic") // automatic | school-defined
+  admissionPrefix   String?
+
+  // Step 6 — service intentions (details configured post-registration)
+  feesChoice      String? // yes | later
+  mpesaChoice     String? // later | no
+  emailChoice     String? // later | platform | own
+  whatsappChoice  String? // later | not-now
+  calendarType    String? @default("term-based")
+
+  // Per-school parent service fee (KES/month per student).
+  // Set by the SCHOOL, not the platform — Super Admin never prices this.
+  parentMonthlyFee Decimal @db.Decimal(12, 2) @default(300)
+
+  // Verification pipeline: PENDING → (email verified, Super Admin reviews
+  // documents) → VERIFIED. Separate from the operational status field.
+  verificationStatus String @default("PENDING")
+
+  // Step 7 — legal consents (ODPC-aligned record keeping)
+  termsVersion     String?
+  privacyVersion   String?
+  termsAcceptedAt  DateTime?
+  termsAcceptedBy  String?
+  termsAcceptedIp  String?
+  authorizedConfirm Boolean @default(false)
+  accuracyConfirm   Boolean @default(false)
+
+  onboardingCompleted Boolean @default(false)
+
+  users      User[]
+  students   Student[]
+  teachers   Teacher[]
+  invoices   Invoice[]
+  payments   Payment[]
+  auditLogs  AuditLog[]
+  academicYears AcademicYear[]
+  subscriptions Subscription[]
+  platformInvoices PlatformInvoice[]
+  platformPayments PlatformPayment[]
+  verificationTokens EmailVerificationToken[]
+
+  @@map("schools")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  schoolId     String?
+  school       School?  @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  email        String
+  passwordHash String
+  userType     UserType @default(SCHOOL_ADMIN)
+  firstName    String?
+  lastName     String?
+  phone        String?
+  jobTitle     String?
+  emailVerified Boolean @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([schoolId, email])
+  @@map("users")
+}
+
+model Student {
+  id          String   @id @default(cuid())
+  schoolId    String
+  school      School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  admissionNo String
+  firstName   String
+  lastName    String
+  classId     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  invoices Invoice[]
+  payments Payment[]
+
+  @@unique([schoolId, admissionNo])
+  @@map("students")
+}
+
+model Teacher {
+  id        String   @id @default(cuid())
+  schoolId  String
+  school    School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  userId    String?
+  firstName String
+  lastName  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("teachers")
+}
+
+model AcademicYear {
+  id        String   @id @default(cuid())
+  schoolId  String
+  school    School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  name      String
+  isCurrent Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@unique([schoolId, name])
+  @@map("academic_years")
+}
+
+model FeeStructure {
+  id        String   @id @default(cuid())
+  schoolId  String
+  name      String
+  amount    Decimal  @db.Decimal(12, 2)
+  createdAt DateTime @default(now())
+
+  @@map("fee_structures")
+}
+
+model Invoice {
+  id        String        @id @default(cuid())
+  schoolId  String
+  school    School        @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  studentId String
+  student   Student       @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  total     Decimal       @db.Decimal(12, 2)
+  balance   Decimal       @db.Decimal(12, 2)
+  status    InvoiceStatus @default(DRAFT)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  items    InvoiceItem[]
+  payments Payment[]
+
+  @@map("invoices")
+}
+
+model InvoiceItem {
+  id        String  @id @default(cuid())
+  invoiceId String
+  invoice   Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  label     String
+  amount    Decimal @db.Decimal(12, 2)
+
+  @@map("invoice_items")
+}
+
+model Payment {
+  id            String        @id @default(cuid())
+  schoolId      String
+  school        School        @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  studentId     String
+  student       Student       @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  invoiceId     String?
+  invoice       Invoice?      @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+  amount        Decimal       @db.Decimal(12, 2)
+  method        PaymentMethod @default(MANUAL)
+  status        PaymentStatus @default(PENDING)
+  mpesaReceipt  String?       @unique
+  createdAt     DateTime      @default(now())
+
+  @@map("payments")
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  schoolId  String?
+  school    School?  @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  actorId   String?
+  action    String
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@map("audit_logs")
+}
+
+// ─── Platform billing (MtandaoLabs revenue — separate from school finance) ───
+
+model SubscriptionPlan {
+  id               String   @id @default(cuid())
+  name             String
+  slug             String   @unique
+  quarterlyPrice   Decimal  @db.Decimal(12, 2)
+  minStudents      Int      @default(0)
+  maxStudents      Int? // null = unlimited (Custom)
+  graceStudents    Int      @default(2) // extra students before upgrade is required
+  features         Json?
+  active           Boolean  @default(true)
+  displayOrder     Int      @default(0)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  subscriptions Subscription[]
+
+  @@map("subscription_plans")
+}
+
+model Subscription {
+  id                 String             @id @default(cuid())
+  schoolId           String
+  school             School             @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  planId             String
+  plan               SubscriptionPlan   @relation(fields: [planId], references: [id])
+  status             SubscriptionStatus @default(TRIALING)
+  currentPeriodStart DateTime           @default(now())
+  currentPeriodEnd   DateTime
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  invoices PlatformInvoice[]
+
+  @@map("subscriptions")
+}
+
+model PlatformInvoice {
+  id             String        @id @default(cuid())
+  schoolId       String
+  school         School        @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  subscriptionId String?
+  subscription   Subscription? @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+  amount         Decimal       @db.Decimal(12, 2)
+  status         InvoiceStatus @default(DRAFT)
+  periodStart    DateTime?
+  periodEnd      DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  payments PlatformPayment[]
+
+  @@map("platform_invoices")
+}
+
+model PlatformPayment {
+  id           String                @id @default(cuid())
+  schoolId     String
+  school       School                @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  invoiceId    String?
+  invoice      PlatformInvoice?      @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+  amount       Decimal               @db.Decimal(12, 2)
+  method       PaymentMethod         @default(MPESA)
+  status       PlatformPaymentStatus @default(PENDING)
+  mpesaReceipt String?               @unique
+  provider     String? // daraja | payhero — which rail sent the push
+  externalRef  String?               @unique // CheckoutRequestID / PayHero reference
+  createdAt    DateTime              @default(now())
+
+  @@map("platform_payments")
+}
+
+// Email verification (mandatory before tenant activation).
+model EmailVerificationToken {
+  id        String    @id @default(cuid())
+  schoolId  String
+  school    School    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  userId    String
+  token     String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@map("email_verification_tokens")
+}
+
+// ─── Platform email (OTP + notifications) ───
+// One active row: Super Admin configures SMTP here. The password is stored
+// ENCRYPTED (AES-256-GCM) — it must be reversible for SMTP login, unlike
+// user passwords which are one-way hashed.
+
+model PlatformEmailSettings {
+  id            String   @id @default(cuid())
+  provider      String   @default("smtp")
+  host          String
+  port          Int      @default(587)
+  username      String
+  passwordEnc   String // AES-256-GCM ciphertext (iv:cipher:tag, base64)
+  fromEmail     String
+  fromName      String   @default("MtandaoLabs")
+  secure        Boolean  @default(false) // true = port 465 TLS
+  active        Boolean  @default(true)
+  updatedBy     String?
+  lastVerifiedAt DateTime?
+  lastError     String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("platform_email_settings")
+}
+
+// OTPs for email verification / login / notifications.
+// Only the SHA-256 hash is stored — codes cannot be recovered from the DB.
+model EmailOtp {
+  id        String    @id @default(cuid())
+  email     String
+  purpose   String    @default("verify") // verify | login | notify
+  codeHash  String
+  expiresAt DateTime
+  consumedAt DateTime?
+  attempts  Int       @default(0)
+  createdAt DateTime  @default(now())
+
+  @@index([email, purpose])
+  @@map("email_otps")
+}
+
+// ─── Payment providers (platform-level credentials) ───
+// One row per provider ('daraja' | 'payhero'). The credentials JSON is
+// AES-256-GCM encrypted — never plain text. Schools hold their own
+// credentials separately in tenant settings (same encryption).
+
+model PaymentProviderConfig {
+  id              String   @id @default(cuid())
+  provider        String   @unique // daraja | payhero
+  environment     String   @default("sandbox") // sandbox | production
+  credentialsEnc  String // encrypted JSON of provider fields
+  active          Boolean  @default(true)
+  updatedBy       String?
+  lastVerifiedAt DateTime?
+  lastError      String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@map("payment_provider_configs")
+}
+
+// Platform → tenant broadcasts (maintenance, features, fee reminders).
+model PlatformAnnouncement {
+  id          String   @id @default(cuid())
+  title       String
+  body        String
+  publishedBy String?
+  createdAt   DateTime @default(now())
+
+  @@map("platform_announcements")
+}

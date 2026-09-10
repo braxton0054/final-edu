@@ -1,0 +1,22 @@
+-- AlterTable
+ALTER TABLE "schools" ADD COLUMN     "accuracyConfirm" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN     "admissionPrefix" TEXT,
+ADD COLUMN     "admissionsEmail" TEXT,
+ADD COLUMN     "alternativePhone" TEXT,
+ADD COLUMN     "calendarType" TEXT DEFAULT 'term-based',
+ADD COLUMN     "description" TEXT,
+ADD COLUMN     "emailChoice" TEXT,
+ADD COLUMN     "estimatedStreams" INTEGER,
+ADD COLUMN     "feesChoice" TEXT,
+ADD COLUMN     "financeEmail" TEXT,
+ADD COLUMN     "location" TEXT,
+ADD COLUMN     "mpesaChoice" TEXT,
+ADD COLUMN     "postalCode" TEXT,
+ADD COLUMN     "reportCardPreference" TEXT,
+ADD COLUMN     "studentIdFormat" TEXT DEFAULT 'automatic',
+ADD COLUMN     "termEndDate" TIMESTAMP(3),
+ADD COLUMN     "termStartDate" TIMESTAMP(3),
+ADD COLUMN     "verificationStatus" TEXT NOT NULL DEFAULT 'PENDING',
+ADD COLUMN     "whatsappChoice" TEXT,
+ADD COLUMN     "whatsappNumber" TEXT;
+

@@ -1,0 +1,73 @@
+import { prisma } from "@mtanda/database";
+
+const input = {
+  width: "7rem",
+  padding: "0.4rem 0.5rem",
+  borderRadius: "8px",
+  border: "1px solid var(--line)",
+  background: "var(--bg)",
+  color: "var(--ink)",
+} as const;
+
+export default async function PlansPage() {
+  const plans = await prisma.subscriptionPlan.findMany({
+    orderBy: { displayOrder: "asc" },
+    include: { _count: { select: { subscriptions: true } } },
+  });
+
+  return (
+    <>
+      <div className="admin-top"><h1>Plans &amp; Pricing</h1></div>
+      <div className="admin-body">
+        <p style={{ color: "var(--muted)" }}>
+          Configuration-driven — adjust prices and limits here, never in code.
+          The pricing page, signup, and enrollment checks read these rows live.
+          Leave max students empty for unlimited (Custom).
+        </p>
+        <div className="admin-panel">
+          <table className="admin-table">
+            <thead>
+              <tr><th>Plan</th><th>Quarterly (KSh)</th><th>Min</th><th>Max</th><th>Grace</th><th>Schools</th><th>Active</th><th></th></tr>
+            </thead>
+            <tbody>
+              {plans.map((p) => {
+                const formId = `plan-${p.slug}`;
+                return (
+                  <tr key={p.slug}>
+                    <td><strong>{p.name}</strong></td>
+                    <td>
+                      <input name="quarterlyPrice" form={formId} type="number" min={0} step={100}
+                        defaultValue={Number(p.quarterlyPrice)} style={input} />
+                    </td>
+                    <td>
+                      <input name="minStudents" form={formId} type="number" min={0}
+                        defaultValue={p.minStudents} style={{ ...input, width: "5rem" }} />
+                    </td>
+                    <td>
+                      <input name="maxStudents" form={formId} type="number" min={0}
+                        defaultValue={p.maxStudents ?? ""} placeholder="∞" style={{ ...input, width: "5rem" }} />
+                    </td>
+                    <td>
+                      <input name="graceStudents" form={formId} type="number" min={0}
+                        defaultValue={p.graceStudents} style={{ ...input, width: "4rem" }} />
+                    </td>
+                    <td>{p._count.subscriptions}</td>
+                    <td><span className={`admin-badge ${p.active ? "green" : ""}`}>{p.active ? "ON" : "OFF"}</span></td>
+                    <td style={{ whiteSpace: "nowrap" }}>
+                      <form id={formId} action={`/api/admin/plans/${p.slug}/update`} method="POST" style={{ display: "inline" }}>
+                        <button type="submit">Save</button>
+                      </form>{" "}
+                      <form action={`/api/admin/plans/${p.slug}/toggle`} method="POST" style={{ display: "inline" }}>
+                        <button type="submit">{p.active ? "Disable" : "Enable"}</button>
+                      </form>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </>
+  );
+}

@@ -1,0 +1,401 @@
+/* Auth + registration wizard styles (brand: ink + orange) */
+
+.reg-shell {
+  display: flex;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--ink);
+}
+
+/* ---------- Left rail ---------- */
+.reg-rail {
+  width: 380px;
+  flex-shrink: 0;
+  background: linear-gradient(165deg, #0b0e11, #1c242b);
+  color: #e8ecef;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.reg-rail .back {
+  color: #9aa4ae;
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.reg-rail .back:hover {
+  color: #fff;
+}
+
+.reg-steps {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.reg-steps button {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  width: 100%;
+  background: none;
+  border: none;
+  color: inherit;
+  text-align: left;
+  padding: 0.7rem 0.75rem;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 0.95rem;
+}
+
+.reg-steps button:disabled {
+  cursor: default;
+}
+
+.reg-steps button:not(:disabled):hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.reg-steps button.current {
+  background: rgba(245, 158, 11, 0.14);
+}
+
+.reg-dot {
+  width: 2rem;
+  height: 2rem;
+  flex-shrink: 0;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.85rem;
+  border: 1.5px solid #4a545e;
+  color: #9aa4ae;
+}
+
+button.current .reg-dot {
+  border-color: var(--brand-accent);
+  color: var(--brand-accent);
+}
+
+button.done-step .reg-dot {
+  background: var(--brand-accent);
+  border-color: var(--brand-accent);
+  color: #101418;
+}
+
+.reg-step-text small {
+  display: block;
+  color: #9aa4ae;
+  font-size: 0.78rem;
+}
+
+button.current .reg-step-text small {
+  color: #cfd6d1;
+}
+
+.reg-rail-foot {
+  margin-top: auto;
+  font-size: 0.85rem;
+  color: #9aa4ae;
+  border-top: 1px solid #26302b;
+  padding-top: 1.25rem;
+}
+
+.reg-rail-foot a {
+  color: var(--brand-accent);
+  text-decoration: none;
+}
+
+/* ---------- Right content ---------- */
+.reg-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  justify-content: center;
+  padding: 3rem 2rem 4rem;
+}
+
+.reg-card {
+  width: 100%;
+  max-width: 640px;
+}
+
+.reg-progress {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--line);
+  overflow: hidden;
+  margin-bottom: 2rem;
+}
+
+.reg-progress > span {
+  display: block;
+  height: 100%;
+  background: var(--brand-accent);
+  transition: width 0.25s ease;
+}
+
+.reg-kicker {
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--brand-accent-dark);
+}
+
+.reg-card h1 {
+  font-size: 1.9rem;
+  margin: 0.4rem 0 0.4rem;
+  letter-spacing: -0.02em;
+}
+
+.reg-sub {
+  color: var(--muted);
+  margin: 0 0 1.75rem;
+}
+
+.reg-field {
+  margin-bottom: 1.1rem;
+}
+
+.reg-field > span {
+  display: block;
+  font-weight: 600;
+  font-size: 0.92rem;
+  margin-bottom: 0.35rem;
+}
+
+.reg-field small {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.reg-input,
+.reg-select {
+  width: 100%;
+  padding: 0.7rem 0.85rem;
+  border-radius: 10px;
+  border: 1.5px solid var(--line);
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 0.95rem;
+}
+
+.reg-input:focus,
+.reg-select:focus {
+  outline: none;
+  border-color: var(--brand-accent);
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
+}
+
+.reg-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.reg-checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.reg-chip {
+  border: 1.5px solid var(--line);
+  border-radius: 999px;
+  padding: 0.4rem 0.85rem;
+  font-size: 0.88rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.reg-chip.on {
+  border-color: var(--brand-accent);
+  background: rgba(245, 158, 11, 0.12);
+  font-weight: 700;
+}
+
+.reg-radio-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.reg-radio-card {
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+  padding: 0.9rem 1rem;
+  cursor: pointer;
+}
+
+.reg-radio-card.on {
+  border-color: var(--brand-accent);
+  background: rgba(245, 158, 11, 0.08);
+}
+
+.reg-radio-card strong {
+  display: block;
+}
+
+.reg-radio-card small {
+  color: var(--muted);
+}
+
+.reg-legal {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0.8rem 1rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.92rem;
+  cursor: pointer;
+}
+
+.reg-legal input {
+  margin-top: 0.25rem;
+  accent-color: var(--brand-accent);
+}
+
+.reg-error {
+  background: rgba(200, 16, 46, 0.08);
+  border: 1px solid rgba(200, 16, 46, 0.35);
+  color: #c8102e;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  margin: 1.25rem 0 0;
+  font-size: 0.92rem;
+}
+
+html[data-theme="dark"] .reg-error {
+  color: #ff8a8a;
+}
+
+.reg-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+}
+
+.reg-btn {
+  padding: 0.75rem 1.75rem;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  border: 2px solid transparent;
+  cursor: pointer;
+}
+
+.reg-btn-primary {
+  background: var(--brand-accent);
+  color: #101418;
+}
+
+.reg-btn-primary:hover {
+  background: #d97706;
+}
+
+.reg-btn-primary:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.reg-btn-ghost {
+  background: transparent;
+  border-color: var(--line);
+  color: var(--ink);
+}
+
+.reg-review {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+}
+
+.reg-review-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.65rem 1rem;
+  font-size: 0.92rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.reg-review-row:last-child {
+  border-bottom: none;
+}
+
+.reg-review-row span:first-child {
+  color: var(--muted);
+}
+
+.reg-success {
+  text-align: left;
+}
+
+.reg-success-box {
+  border: 1.5px solid var(--brand-accent);
+  background: rgba(245, 158, 11, 0.08);
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin: 1.25rem 0;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 900px) {
+  .reg-shell {
+    flex-direction: column;
+  }
+
+  .reg-rail {
+    width: 100%;
+    height: auto;
+    position: static;
+    padding: 1.25rem;
+    gap: 1rem;
+  }
+
+  .reg-steps {
+    flex-direction: row;
+    overflow-x: auto;
+    gap: 0.5rem;
+  }
+
+  .reg-steps button {
+    white-space: nowrap;
+    padding: 0.5rem;
+  }
+
+  .reg-step-text small,
+  .reg-rail-foot {
+    display: none;
+  }
+
+  .reg-main {
+    padding: 2rem 1.25rem 3rem;
+  }
+}
+
+@media (max-width: 560px) {
+  .reg-pair,
+  .reg-radio-cards {
+    grid-template-columns: 1fr;
+  }
+}

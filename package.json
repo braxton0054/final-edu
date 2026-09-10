@@ -1,0 +1,32 @@
+{
+  "name": "mtandaolabsedu",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@9.15.0",
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "db:generate": "pnpm --filter @mtanda/database db:generate",
+    "db:migrate": "pnpm --filter @mtanda/database db:migrate",
+    "db:seed": "pnpm --filter @mtanda/database db:seed",
+    "db:studio": "pnpm --filter @mtanda/database db:studio"
+  },
+  "devDependencies": {
+    "turbo": "^2.5.0",
+    "typescript": "^5.7.0",
+    "eslint": "^9.18.0",
+    "prettier": "^3.4.0"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "pnpm": {
+    "supportedArchitectures": {
+      "os": ["linux"],
+      "cpu": ["x64"],
+      "libc": ["glibc"]
+    }
+  }
+}
