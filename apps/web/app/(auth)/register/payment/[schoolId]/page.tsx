@@ -33,7 +33,7 @@ export default async function PaymentPage({
       </p>
       {amount > 0 ? (
         <>
-          <p>First quarter due: <strong>KSh {amount.toLocaleString()}</strong> (14-day trial included).</p>
+          <p>First quarter due: <strong>KSh {amount.toLocaleString()}</strong> (3-month free trial included).</p>
           <StkForm schoolId={school.id} amount={amount} />
         </>
       ) : (

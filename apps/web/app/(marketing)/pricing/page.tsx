@@ -25,7 +25,7 @@ export default async function PricingPage() {
         <span className="lp-eyebrow">Pricing</span>
         <h1 className="lp-h2">Simple plans that grow with your school</h1>
         <p className="lp-lead">
-          Per quarter, per school. Every plan includes a 14-day trial.
+          Per quarter, per school. Every plan includes a 3-month free trial.
           Parent service fees are set by each school, not by us.
         </p>
 

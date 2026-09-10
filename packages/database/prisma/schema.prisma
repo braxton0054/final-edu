@@ -321,6 +321,8 @@ model Subscription {
   status             SubscriptionStatus @default(TRIALING)
   currentPeriodStart DateTime           @default(now())
   currentPeriodEnd   DateTime
+  churnReason       String?
+  churnedAt         DateTime?
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt
 

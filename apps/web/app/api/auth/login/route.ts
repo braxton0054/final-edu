@@ -13,9 +13,25 @@ export async function POST(request: Request) {
   const email = String(body.email ?? "").toLowerCase().trim();
   const password = String(body.password ?? "");
 
-  const user = await prisma.user.findFirst({ where: { email } });
+  const user = await prisma.user.findFirst({
+    where: { email },
+    include: { school: { select: { status: true } } },
+  });
   if (!user || !(await verifyPassword(password, user.passwordHash))) {
     return NextResponse.json({ ok: false, error: "Invalid email or password." }, { status: 401 });
+  }
+
+  // Hard cutoff: suspended/archived schools cannot sign in (trial expired
+  // without payment). Contact the platform to reactivate.
+  if (
+    user.schoolId &&
+    user.school &&
+    (user.school.status === "SUSPENDED" || user.school.status === "ARCHIVED")
+  ) {
+    return NextResponse.json(
+      { ok: false, error: "This school account is suspended. Complete payment to reactivate it." },
+      { status: 403 }
+    );
   }
 
   const token = createSessionToken({

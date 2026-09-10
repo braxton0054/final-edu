@@ -37,7 +37,7 @@ export default function VerifyEmailPage({
       {state === "loading" && <p>Verifying your email…</p>}
       {state === "ok" && (
         <div>
-          <p><strong>Email verified.</strong> Your school account is active on a 14-day trial.</p>
+          <p><strong>Email verified.</strong> Your school account is active on a 3-month free trial.</p>
           <p><a href="/login">Continue to login →</a></p>
         </div>
       )}

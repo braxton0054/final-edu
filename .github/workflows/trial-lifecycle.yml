@@ -1,0 +1,18 @@
+name: trial-lifecycle
+on:
+  schedule:
+    - cron: "0 5 * * *" # daily 08:00 EAT
+  workflow_dispatch:
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run trial lifecycle (reminders, suspensions, deletions)
+        run: |
+          curl -s -X POST "$APP_URL/api/cron/trial-lifecycle" \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            -w "\nHTTP %{http_code}\n"
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
