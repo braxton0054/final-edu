@@ -6,17 +6,25 @@ import { adminActor } from "@/lib/auth/admin-actor";
 const base = () =>
   new URL("/admin/email", process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000");
 
-// Save platform email settings (generic SMTP or ZeptoMail).
-// ZeptoMail auth is fixed by their docs: host smtp.zeptomail.com,
-// username literally "emailapikey", password = agent SMTP password.
+// Provider presets (hosts/usernames per official docs). Only the password
+// (or key) is ever typed in — everything else is fixed or plain config.
+const PRESETS: Record<string, { host: string | null; userFixed: string | null }> = {
+  smtp: { host: null, userFixed: null },
+  zeptomail: { host: "smtp.zeptomail.com", userFixed: "emailapikey" },
+  resend: { host: "smtp.resend.com", userFixed: "resend" },
+  brevo: { host: "smtp-relay.brevo.com", userFixed: null },
+  gmail: { host: "smtp.gmail.com", userFixed: null },
+};
+
+// Save platform email settings for any provider.
 export async function POST(request: Request) {
   const form = await request.formData().catch(() => null);
   if (!form) return NextResponse.redirect(base(), 303);
 
   const provider = String(form.get("provider") ?? "smtp");
-  const isZepto = provider === "zeptomail";
-  const host = isZepto ? "smtp.zeptomail.com" : String(form.get("host") ?? "").trim();
-  const username = isZepto ? "emailapikey" : String(form.get("username") ?? "").trim();
+  const preset = PRESETS[provider] ?? PRESETS.smtp;
+  const host = preset.host ?? String(form.get("host") ?? "").trim();
+  const username = preset.userFixed ?? String(form.get("username") ?? "").trim();
   const fromEmail = String(form.get("fromEmail") ?? "").trim().toLowerCase();
   const password = String(form.get("password") ?? "");
   const port = Math.max(1, Number(form.get("port")) || 587);
@@ -32,13 +40,13 @@ export async function POST(request: Request) {
   }
 
   const data = {
-    provider: isZepto ? "zeptomail" : "smtp",
+    provider,
     host,
     port,
     username,
     fromEmail,
     fromName: String(form.get("fromName") ?? "MtandaoLabs").trim() || "MtandaoLabs",
-    secure: isZepto ? port === 465 : form.get("secure") === "on",
+    secure: provider === "smtp" ? form.get("secure") === "on" : port === 465,
     active: form.get("active") === "on",
     ...(password ? { passwordEnc: encryptSecret(password) } : {}),
   };
@@ -53,5 +61,5 @@ export async function POST(request: Request) {
   await prisma.auditLog.create({
     data: { actorId: await adminActor(), action: "platform.email_settings_saved" },
   });
-  return NextResponse.redirect(base(), 303);
+  return NextResponse.redirect(new URL(`/admin/email?provider=${provider}`, base()), 303);
 }
