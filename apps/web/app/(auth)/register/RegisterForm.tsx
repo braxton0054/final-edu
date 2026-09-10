@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import SiteLogo from "../../components/SiteLogo";
+import { KENYA_COUNTIES, countyByName } from "./kenya-locations";
 
 type Plan = {
   slug: string;
@@ -20,17 +21,6 @@ const STEPS = [
   { title: "Branding", hint: "Identity & URL" },
   { title: "Subscription", hint: "Plan & intentions" },
   { title: "Terms", hint: "Review & confirm" },
-];
-
-const COUNTIES = [
-  "Mombasa", "Kwale", "Kilifi", "Tana River", "Lamu", "Taita-Taveta",
-  "Garissa", "Wajir", "Mandera", "Marsabit", "Isiolo", "Meru",
-  "Tharaka-Nithi", "Embu", "Kitui", "Machakos", "Makueni", "Nyandarua",
-  "Nyeri", "Kirinyaga", "Murang'a", "Kiambu", "Turkana", "West Pokot",
-  "Samburu", "Trans-Nzoia", "Uasin Gishu", "Elgeyo-Marakwet", "Nandi",
-  "Baringo", "Laikipia", "Nakuru", "Narok", "Kajiado", "Kericho", "Bomet",
-  "Kakamega", "Vihiga", "Bungoma", "Busia", "Siaya", "Kisumu", "Homa Bay",
-  "Migori", "Kisii", "Nyamira", "Nairobi",
 ];
 
 // CBC levels, grouped for display. Kept configurable here so the structure
@@ -220,6 +210,19 @@ export default function RegisterForm({ initialPlan }: { initialPlan?: string }) 
 
   const selectedPlan = plans.find((p) => p.slug === form.planSlug);
   const pct = Math.round(((step + 1) / STEPS.length) * 100);
+  const activeCounty = countyByName(form.county);
+
+  // Cascading location: county → sub-counties + towns + postal code.
+  function pickCounty(name: string) {
+    const county = countyByName(name);
+    setForm((f) => ({
+      ...f,
+      county: name,
+      subCounty: "",
+      town: "",
+      postalCode: county ? county.postal : f.postalCode,
+    }));
+  }
 
   return (
     <div className="reg-shell">
@@ -337,18 +340,27 @@ export default function RegisterForm({ initialPlan }: { initialPlan?: string }) 
                 <>
                   <div className="reg-pair">
                     <label className="reg-field"><span>County *</span>
-                      <select className="reg-select" value={form.county} onChange={(e) => set("county", e.target.value)}>
+                      <select className="reg-select" value={form.county} onChange={(e) => pickCounty(e.target.value)}>
                         <option value="">— choose county —</option>
-                        {COUNTIES.map((c) => <option key={c}>{c}</option>)}
+                        {KENYA_COUNTIES.map((c) => <option key={c.name} value={c.name}>{c.name}</option>)}
                       </select></label>
                     <label className="reg-field"><span>Sub-county *</span>
-                      <input className="reg-input" value={form.subCounty} onChange={(e) => set("subCounty", e.target.value)} /></label>
+                      <select className="reg-select" value={form.subCounty}
+                        onChange={(e) => set("subCounty", e.target.value)}
+                        disabled={!activeCounty}>
+                        <option value="">{activeCounty ? `— ${activeCounty.subs.length} in ${activeCounty.name} —` : "— pick a county first —"}</option>
+                        {activeCounty?.subs.map((s) => <option key={s} value={s}>{s}</option>)}
+                      </select></label>
                   </div>
                   <div className="reg-pair">
                     <label className="reg-field"><span>Ward</span>
                       <input className="reg-input" value={form.ward} onChange={(e) => set("ward", e.target.value)} /></label>
                     <label className="reg-field"><span>Town / city *</span>
-                      <input className="reg-input" value={form.town} onChange={(e) => set("town", e.target.value)} /></label>
+                      <input className="reg-input" value={form.town} onChange={(e) => set("town", e.target.value)}
+                        list="county-towns" placeholder={activeCounty ? `e.g. ${activeCounty.towns[0]}` : ""} />
+                      <datalist id="county-towns">
+                        {activeCounty?.towns.map((t) => <option key={t} value={t} />)}
+                      </datalist></label>
                   </div>
                   <label className="reg-field"><span>Location</span>
                     <input className="reg-input" value={form.location} onChange={(e) => set("location", e.target.value)} placeholder="Area / estate / village" /></label>
@@ -357,8 +369,8 @@ export default function RegisterForm({ initialPlan }: { initialPlan?: string }) 
                   <div className="reg-pair">
                     <label className="reg-field"><span>Postal address</span>
                       <input className="reg-input" value={form.postalAddress} onChange={(e) => set("postalAddress", e.target.value)} placeholder="P.O. Box …" /></label>
-                    <label className="reg-field"><span>Postal code</span>
-                      <input className="reg-input" value={form.postalCode} onChange={(e) => set("postalCode", e.target.value)} /></label>
+                    <label className="reg-field"><span>Postal code <small>(auto-filled, editable)</small></span>
+                      <input className="reg-input" value={form.postalCode} onChange={(e) => set("postalCode", e.target.value)} placeholder="e.g. 20100" /></label>
                   </div>
                 </>
               )}
