@@ -35,6 +35,25 @@ export default async function SchoolDetailPage({
     <>
       <div className="admin-top">
         <h1>{school.name}</h1>
+        <div style={{ marginLeft: "auto", display: "flex", gap: "0.5rem" }}>
+          {school.status !== "SUSPENDED" ? (
+            <form action={`/api/admin/schools/${school.id}/status`} method="POST">
+              <input type="hidden" name="status" value="SUSPENDED" />
+              <button type="submit">Suspend</button>
+            </form>
+          ) : (
+            <form action={`/api/admin/schools/${school.id}/status`} method="POST">
+              <input type="hidden" name="status" value="ACTIVE" />
+              <button type="submit">Reactivate</button>
+            </form>
+          )}
+          {school.status !== "ARCHIVED" && (
+            <form action={`/api/admin/schools/${school.id}/status`} method="POST">
+              <input type="hidden" name="status" value="ARCHIVED" />
+              <button type="submit">Archive</button>
+            </form>
+          )}
+        </div>
       </div>
       <div className="admin-body">
         <div className="admin-cards">

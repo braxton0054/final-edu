@@ -65,13 +65,6 @@ const PLANS = [
 ];
 
 async function main() {
-  const school = await prisma.school.upsert({
-    where: { slug: "demo-school" },
-    update: {},
-    create: { name: "Demo School", slug: "demo-school", status: "ACTIVE" },
-  });
-  console.log(`Seeded school: ${school.slug}`);
-
   for (const plan of PLANS) {
     await prisma.subscriptionPlan.upsert({
       where: { slug: plan.slug },

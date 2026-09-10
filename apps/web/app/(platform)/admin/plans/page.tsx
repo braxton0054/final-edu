@@ -25,6 +25,20 @@ export default async function PlansPage() {
           Leave max students empty for unlimited (Custom).
         </p>
         <div className="admin-panel">
+          <h2>Create plan</h2>
+          <form action="/api/admin/plans" method="POST"
+            style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: "0.75rem", alignItems: "end" }}>
+            <label>Name *<input name="name" required style={input} /></label>
+            <label>Slug <small>(auto)</small><input name="slug" style={input} /></label>
+            <label>Quarterly (KSh)<input name="quarterlyPrice" type="number" min={0} step={100} defaultValue={0} style={input} /></label>
+            <label>Min<input name="minStudents" type="number" min={0} defaultValue={0} style={input} /></label>
+            <label>Max <small>(blank ∞)</small><input name="maxStudents" type="number" min={0} style={input} /></label>
+            <label>Grace<input name="graceStudents" type="number" min={0} defaultValue={2} style={input} /></label>
+            <label>Trial days<input name="trialDays" type="number" min={0} defaultValue={90} style={input} /></label>
+            <div><button type="submit">Create</button></div>
+          </form>
+        </div>
+        <div className="admin-panel">
           <table className="admin-table">
             <thead>
               <tr><th>Plan</th><th>Quarterly (KSh)</th><th>Min</th><th>Max</th><th>Grace</th><th>Trial (days)</th><th>Schools</th><th>Active</th><th></th></tr>
@@ -63,7 +77,12 @@ export default async function PlansPage() {
                       </form>{" "}
                       <form action={`/api/admin/plans/${p.slug}/toggle`} method="POST" style={{ display: "inline" }}>
                         <button type="submit">{p.active ? "Disable" : "Enable"}</button>
-                      </form>
+                      </form>{" "}
+                      {p._count.subscriptions === 0 && (
+                        <form action={`/api/admin/plans/${p.slug}/delete`} method="POST" style={{ display: "inline" }}>
+                          <button type="submit">Delete</button>
+                        </form>
+                      )}
                     </td>
                   </tr>
                 );
