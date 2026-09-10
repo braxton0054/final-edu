@@ -9,6 +9,9 @@ export default async function SubscriptionsPage({
 }) {
   const { status: statusParam } = await searchParams;
   const status = (statusParam ?? "ALL").toUpperCase();
+  const now = new Date();
+  const expiringFrom = new Date(now.getTime());
+  const expiringTo = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
   const [plans, subs, expiring] = await Promise.all([
     prisma.subscriptionPlan.findMany({ orderBy: { displayOrder: "asc" } }),
     prisma.subscription.findMany({
@@ -21,8 +24,8 @@ export default async function SubscriptionsPage({
       where: {
         status: "ACTIVE",
         currentPeriodEnd: {
-          gte: new Date(),
-          lte: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+          gte: expiringFrom,
+          lte: expiringTo,
         },
       },
     }),

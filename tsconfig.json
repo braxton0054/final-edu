@@ -17,9 +17,7 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./apps/web/*"],
-      "@mtanda/database": ["./packages/database/src"],
-      "@mtanda/auth": ["./packages/auth/src"],
-      "@mtanda/tenant": ["./packages/tenant/src"]
+      "@mtanda/database": ["./packages/database/src"]
     }
   },
   "exclude": ["node_modules"]

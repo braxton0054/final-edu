@@ -1,25 +1,47 @@
+import { cookies, headers } from "next/headers";
 import { prisma } from "@mtanda/database";
+import { readSessionToken } from "@/lib/auth/session";
+import { getTenantSlug } from "@/lib/tenant";
 
 // Tenant onboarding checklist — completes gradually after registration.
-// Resolves the demo school for now; domain-based resolution plugs in here.
+// The school is resolved from the tenant subdomain, falling back to the
+// signed-in user's own school.
+export const dynamic = "force-dynamic";
+
 export default async function TenantDashboard() {
-  const school = await prisma.school.findFirst({
-    orderBy: { createdAt: "desc" },
-    include: {
-      _count: { select: { students: true, teachers: true, users: true } },
-      subscriptions: {
-        orderBy: { createdAt: "desc" },
-        take: 1,
-        include: { plan: true },
-      },
-    },
-  });
+  const [headerStore, cookieStore] = await Promise.all([headers(), cookies()]);
+  const session = readSessionToken(cookieStore.get("mtanda_session")?.value);
+  const slug = getTenantSlug(headerStore);
+
+  const where = slug
+    ? { OR: [{ slug }, { subdomain: slug }] }
+    : session?.schoolId
+      ? { id: session.schoolId }
+      : null;
+
+  const school = where
+    ? await prisma.school.findFirst({
+        where,
+        include: {
+          _count: { select: { students: true, teachers: true, users: true } },
+          subscriptions: {
+            orderBy: { createdAt: "desc" },
+            take: 1,
+            include: { plan: true },
+          },
+        },
+      })
+    : null;
 
   if (!school) {
     return (
       <div>
         <h1>School Dashboard</h1>
-        <p>No school found.</p>
+        <p>
+          {slug
+            ? `No school is registered for "${slug}".`
+            : "No school is linked to this address. Sign in or use your school's subdomain."}
+        </p>
       </div>
     );
   }

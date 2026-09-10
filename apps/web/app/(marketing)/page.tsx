@@ -1,3 +1,4 @@
+import Link from "next/link";
 import SiteLogo from "../components/SiteLogo";
 import ThemeToggle from "../components/ThemeToggle";
 import { prisma } from "@mtanda/database";
@@ -15,16 +16,79 @@ async function trialDays(): Promise<number> {
   }
 }
 
+type HomePlan = {
+  slug: string;
+  name: string;
+  price: number; // quarterly KES; 0 means custom pricing
+  maxStudents: number | null;
+  features: string[];
+};
+
+// Mirrors packages/database/prisma/seed.ts so the page still renders real
+// figures when the database is unavailable at build time.
+const FALLBACK_PLANS: HomePlan[] = [
+  {
+    slug: "starter",
+    name: "Starter",
+    price: 30000,
+    maxStudents: 250,
+    features: ["Parent Portal", "Finance", "M-Pesa", "CBC", "Report Designer"],
+  },
+  {
+    slug: "pro",
+    name: "Pro",
+    price: 60000,
+    maxStudents: 600,
+    features: [
+      "Parent Portal",
+      "Finance",
+      "M-Pesa",
+      "CBC",
+      "WhatsApp",
+      "Report Designer",
+      "Custom Domain",
+    ],
+  },
+  {
+    slug: "custom",
+    name: "Custom",
+    price: 0,
+    maxStudents: null,
+    features: ["Negotiated platform fee", "Everything in Premium"],
+  },
+];
+
+async function headlinePlans(): Promise<HomePlan[]> {
+  try {
+    const rows = await prisma.subscriptionPlan.findMany({
+      where: { active: true },
+      orderBy: { displayOrder: "asc" },
+    });
+    if (rows.length < 3) return FALLBACK_PLANS;
+    const mapped: HomePlan[] = rows.map((p) => ({
+      slug: p.slug,
+      name: p.name,
+      price: Number(p.quarterlyPrice),
+      maxStudents: p.maxStudents,
+      features: (p.features as string[] | null) ?? [],
+    }));
+    // Headline the entry tier, the recommended tier, and the custom tier.
+    return [mapped[0], mapped[1], mapped[mapped.length - 1]];
+  } catch {
+    return FALLBACK_PLANS;
+  }
+}
+
 export default async function MarketingHome() {
-  const trial = await trialDays();
+  const [trial, plans] = await Promise.all([trialDays(), headlinePlans()]);
   return (
     <div className="lp">
       {/* ---------- Nav ---------- */}
       <header className="lp-nav">
         <div className="lp-nav-inner">
-          <a href="/" aria-label="MtandaoLabs home">
+          <Link href="/" aria-label="MtandaoLabs home">
             <SiteLogo />
-          </a>
+          </Link>
           <nav className="lp-links">
             <a href="#features">Features</a>
             <a href="#solutions">Solutions</a>
@@ -88,35 +152,35 @@ export default async function MarketingHome() {
         </div>
       </section>
 
-      {/* ---------- 2. Trust / statistics ---------- */}
-      <section>
+      {/* ---------- 2. Why schools choose it ---------- */}
+      <section className="lp-section">
         <div className="lp-container">
           <p className="lp-center lp-lead" style={{ paddingTop: "2.5rem" }}>
-            Trusted school technology
+            Built for Kenyan schools — from admission to results.
           </p>
-          {/* Replace these figures with real statistics once available. */}
-          <div className="lp-stats">
-            <div className="lp-stat">
-              <strong>500+</strong>
-              <span>Schools</span>
+          <div className="lp-grid-3">
+            <div className="lp-card">
+              <h3>One place for everything</h3>
+              <p>
+                Students, academics, fees, and communication without
+                spreadsheets or disconnected tools.
+              </p>
             </div>
-            <div className="lp-stat">
-              <strong>40K+</strong>
-              <span>Students</span>
+            <div className="lp-card">
+              <h3>Payments that reconcile</h3>
+              <p>
+                Fee invoices, M-Pesa STK Push, receipts, and statements update
+                against the right student automatically.
+              </p>
             </div>
-            <div className="lp-stat">
-              <strong>2K+</strong>
-              <span>Teachers</span>
-            </div>
-            <div className="lp-stat">
-              <strong>99.9%</strong>
-              <span>Platform uptime</span>
+            <div className="lp-card">
+              <h3>Ready for CBC</h3>
+              <p>
+                Mapped for learning areas, strands, sub-strands, and
+                competency-based assessment.
+              </p>
             </div>
           </div>
-          <p className="lp-stats-note">
-            Figures shown are illustrative — publish real statistics once you
-            have them.
-          </p>
         </div>
       </section>
 
@@ -387,73 +451,54 @@ export default async function MarketingHome() {
             </p>
           </div>
           <div className="lp-pricing">
-            <div className="lp-plan">
-              <h3>Starter</h3>
-              <p className="price">—</p>
-              <ul>
-                <li>
-                  <b>500</b> students
-                </li>
-                <li>
-                  <b>50</b> teachers
-                </li>
-                <li>Parent Portal ✓</li>
-                <li>Finance ✓</li>
-                <li>M-Pesa ✓</li>
-                <li>CBC ✓</li>
-                <li>WhatsApp —</li>
-                <li>Report Designer ✓</li>
-                <li>Custom Domain —</li>
-              </ul>
-              <a href="/register?plan=starter" className="lp-btn lp-btn-outline lp-center">
-                Get Started
-              </a>
-            </div>
-            <div className="lp-plan featured">
-              <h3>Pro</h3>
-              <p className="price">—</p>
-              <ul>
-                <li>
-                  <b>2,000</b> students
-                </li>
-                <li>
-                  <b>200</b> teachers
-                </li>
-                <li>Parent Portal ✓</li>
-                <li>Finance ✓</li>
-                <li>M-Pesa ✓</li>
-                <li>CBC ✓</li>
-                <li>WhatsApp ✓</li>
-                <li>Report Designer ✓</li>
-                <li>Custom Domain ✓</li>
-              </ul>
-              <a href="/register?plan=pro" className="lp-btn lp-btn-dark lp-center">
-                Get Started
-              </a>
-            </div>
-            <div className="lp-plan">
-              <h3>Enterprise</h3>
-              <p className="price">Custom</p>
-              <ul>
-                <li>
-                  <b>Custom</b> students
-                </li>
-                <li>
-                  <b>Custom</b> teachers
-                </li>
-                <li>Parent Portal ✓</li>
-                <li>Finance ✓</li>
-                <li>M-Pesa ✓</li>
-                <li>CBC ✓</li>
-                <li>WhatsApp ✓</li>
-                <li>Report Designer ✓</li>
-                <li>Custom Domain ✓</li>
-              </ul>
-              <a href="#contact" className="lp-btn lp-btn-outline lp-center">
-                Contact Sales
-              </a>
-            </div>
+            {plans.map((plan, index) => {
+              const custom = plan.price === 0;
+              const featured = index === 1;
+              return (
+                <div
+                  key={plan.slug}
+                  className={featured ? "lp-plan featured" : "lp-plan"}
+                >
+                  <h3>{plan.name}</h3>
+                  <p className="price">
+                    {custom ? "Custom" : `KSh ${plan.price.toLocaleString()}`}
+                  </p>
+                  {!custom && (
+                    <p style={{ color: "#5b6470", fontSize: "0.85rem" }}>
+                      per 3 months
+                    </p>
+                  )}
+                  <ul>
+                    {plan.maxStudents ? (
+                      <li>
+                        <b>Up to {plan.maxStudents.toLocaleString()}</b> students
+                      </li>
+                    ) : (
+                      <li>
+                        <b>Unlimited</b> students
+                      </li>
+                    )}
+                    {plan.features.map((feature) => (
+                      <li key={feature}>{feature} ✓</li>
+                    ))}
+                  </ul>
+                  <a
+                    href={custom ? "/contact" : `/register?plan=${plan.slug}`}
+                    className={
+                      featured
+                        ? "lp-btn lp-btn-dark lp-center"
+                        : "lp-btn lp-btn-outline lp-center"
+                    }
+                  >
+                    {custom ? "Contact Sales" : "Get Started"}
+                  </a>
+                </div>
+              );
+            })}
           </div>
+          <p className="lp-center" style={{ marginTop: "1.5rem" }}>
+            <a href="/pricing">Compare all plans →</a>
+          </p>
         </div>
       </section>
 
@@ -508,19 +553,25 @@ export default async function MarketingHome() {
         </div>
       </section>
 
-      {/* ---------- 13. Testimonials (placeholder — no fabricated quotes) ---------- */}
+      {/* ---------- 13. Early access ---------- */}
       <section className="lp-section lp-section-soft">
         <div className="lp-container lp-center">
-          <span className="lp-eyebrow">Schools</span>
-          <h2 className="lp-h2">Loved by school administrators</h2>
+          <span className="lp-eyebrow">Early access</span>
+          <h2 className="lp-h2">Become a founding school</h2>
           <p className="lp-lead">
-            Customer stories will appear here once our first schools are live.
+            We are onboarding our first schools and working closely with them to
+            shape the platform. Get in touch to join early.
+          </p>
+          <p style={{ marginTop: "1.5rem" }}>
+            <a href="#contact" className="lp-btn lp-btn-accent">
+              Talk to us
+            </a>
           </p>
         </div>
       </section>
 
       {/* ---------- 14. FAQ ---------- */}
-      <section className="lp-section">
+      <section id="faq" className="lp-section">
         <div className="lp-container">
           <div className="lp-center">
             <span className="lp-eyebrow">FAQ</span>
@@ -589,8 +640,7 @@ export default async function MarketingHome() {
         <div className="lp-footer-grid">
           <div>
             <SiteLogo tone="light" />
-            <p className="lp-tagline">Built to work, never got tired</p>
-            <p>School management made simpler.</p>
+            <p className="lp-tagline">School management made simpler.</p>
             <p>
               <a href="mailto:mtandaolabs@gmail.com">mtandaolabs@gmail.com</a>
               <br />
@@ -629,16 +679,16 @@ export default async function MarketingHome() {
             <h4>Resources</h4>
             <ul>
               <li>
-                <a href="#">Documentation</a>
+                <a href="/features">Features</a>
               </li>
               <li>
-                <a href="#">Help Center</a>
+                <a href="/pricing">Pricing</a>
               </li>
               <li>
-                <a href="#">Blog</a>
+                <a href="#faq">FAQs</a>
               </li>
               <li>
-                <a href="#">FAQs</a>
+                <a href="/contact">Contact</a>
               </li>
             </ul>
           </div>
@@ -649,10 +699,7 @@ export default async function MarketingHome() {
                 <a href="/about">About</a>
               </li>
               <li>
-                <a href="#contact">Contact</a>
-              </li>
-              <li>
-                <a href="#">Careers</a>
+                <a href="/contact">Contact</a>
               </li>
             </ul>
           </div>

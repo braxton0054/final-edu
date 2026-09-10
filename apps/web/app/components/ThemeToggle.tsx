@@ -1,6 +1,33 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useSyncExternalStore } from "react";
+
+type Theme = "light" | "dark";
+
+const listeners = new Set<() => void>();
+
+function subscribe(callback: () => void) {
+  listeners.add(callback);
+  return () => listeners.delete(callback);
+}
+
+function getSnapshot(): Theme {
+  return document.documentElement.dataset.theme === "dark" ? "dark" : "light";
+}
+
+function getServerSnapshot(): Theme {
+  return "light";
+}
+
+function applyTheme(next: Theme) {
+  document.documentElement.dataset.theme = next;
+  try {
+    localStorage.setItem("mtanda-theme", next);
+  } catch {
+    // storage unavailable — theme still applies for this visit
+  }
+  listeners.forEach((listener) => listener());
+}
 
 function SunIcon() {
   return (
@@ -20,22 +47,11 @@ function MoonIcon() {
 }
 
 export default function ThemeToggle() {
-  const [theme, setTheme] = useState("light");
+  const theme = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
-  useEffect(() => {
-    setTheme(document.documentElement.dataset.theme || "light");
-  }, []);
-
-  function toggle() {
-    const next = theme === "dark" ? "light" : "dark";
-    document.documentElement.dataset.theme = next;
-    try {
-      localStorage.setItem("mtanda-theme", next);
-    } catch {
-      // storage unavailable — theme still applies for this visit
-    }
-    setTheme(next);
-  }
+  const toggle = useCallback(() => {
+    applyTheme(theme === "dark" ? "light" : "dark");
+  }, [theme]);
 
   return (
     <button

@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import Link from "next/link";
 import SiteLogo from "../../components/SiteLogo";
 import LoginForm from "./LoginForm";
 
@@ -7,7 +8,7 @@ export default function LoginPage() {
     <div className="reg-shell">
       <aside className="reg-rail">
         <div>
-          <a href="/" className="back">← Back home</a>
+          <Link href="/" className="back">← Back home</Link>
         </div>
         <SiteLogo tone="light" height={44} />
         <div>

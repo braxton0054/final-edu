@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { prisma } from "@mtanda/database";
 
 function quarterStart(): Date {
@@ -58,7 +59,7 @@ export default async function AdminDashboard() {
           <div className="admin-card">
             <div className="label">Pending verification</div>
             <div className="value">
-              <a href="/admin/schools?status=PENDING_VERIFICATION">{pending}</a>
+              <Link href="/admin/schools?status=PENDING_VERIFICATION">{pending}</Link>
             </div>
           </div>
         </div>

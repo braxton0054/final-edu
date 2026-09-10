@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import ThemeToggle from "../../components/ThemeToggle";
 
 const NAV: { label?: string; href?: string; title?: string }[] = [
@@ -53,9 +53,12 @@ export function AdminNav() {
 }
 
 export function AdminTopbar({ email }: { email: string }) {
+  const router = useRouter();
+
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" });
-    window.location.href = "/login";
+    router.push("/login");
+    router.refresh();
   }
 
   return (

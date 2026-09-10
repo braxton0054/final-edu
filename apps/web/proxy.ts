@@ -16,14 +16,24 @@ function b64urlToBytes(s: string): Uint8Array<ArrayBuffer> {
   return bytes.slice();
 }
 
+// A known fallback secret would make every session cookie forgeable, so it is
+// only tolerated outside production.
+function sessionSecret(): string | null {
+  const secret = process.env.NEXTAUTH_SECRET;
+  if (secret && secret.length > 0) return secret;
+  if (process.env.NODE_ENV === "production") return null;
+  return "dev-only-insecure-key";
+}
+
 // Fully verifies the HMAC-signed session cookie (not forgeable).
 async function validSession(request: NextRequest): Promise<Claim | null> {
   try {
     const token = request.cookies.get("mtanda_session")?.value;
     if (!token) return null;
+    const secret = sessionSecret();
+    if (!secret) return null;
     const [payload, sig] = token.split(".");
     if (!payload || !sig) return null;
-    const secret = process.env.NEXTAUTH_SECRET ?? "dev-only-insecure-key";
     const key = await crypto.subtle.importKey(
       "raw",
       new TextEncoder().encode(secret),
@@ -48,14 +58,43 @@ async function validSession(request: NextRequest): Promise<Claim | null> {
   }
 }
 
+// Subdomains that belong to the platform itself, never to a school tenant.
+const RESERVED_SUBDOMAINS = new Set([
+  "www",
+  "app",
+  "edu",
+  "admin",
+  "api",
+  "dashboard",
+  "mail",
+]);
+
+// Resolve a school tenant slug from the request host. Only hosts that are a
+// strict subdomain of the configured tenant root (or *.localhost in dev) are
+// treated as tenants, so the marketing/platform domains are never misread.
+function tenantSlugFromHost(host: string): string | null {
+  const hostname = host.split(":")[0].toLowerCase();
+  if (!hostname) return null;
+  const root = (process.env.TENANT_ROOT_DOMAIN ?? "mtandaolabsedu.com").toLowerCase();
+  const isLocalhost = hostname.endsWith(".localhost");
+  const isUnderRoot = hostname.endsWith(`.${root}`);
+  if (!isLocalhost && !isUnderRoot) return null;
+  const sub = hostname.split(".")[0];
+  if (!sub || sub === "localhost" || RESERVED_SUBDOMAINS.has(sub)) return null;
+  return sub;
+}
+
 export default async function proxy(request: NextRequest) {
   const host = request.headers.get("host") ?? "";
-  const response = NextResponse.next();
-  // e.g. myschool.localhost -> myschool ; skip www / platform domains
-  const subdomain = host.split(".")[0];
-  if (subdomain && subdomain !== "www" && subdomain !== "localhost:3000") {
-    response.headers.set("x-tenant-slug", subdomain);
+  const requestHeaders = new Headers(request.headers);
+
+  // Expose the resolved tenant to server components via a request header.
+  const tenantSlug = tenantSlugFromHost(host);
+  if (tenantSlug) {
+    requestHeaders.set("x-tenant-slug", tenantSlug);
   }
+
+  const response = NextResponse.next({ request: { headers: requestHeaders } });
 
   const path = request.nextUrl.pathname;
   const session = await validSession(request);

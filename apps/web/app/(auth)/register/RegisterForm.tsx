@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import SiteLogo from "../../components/SiteLogo";
 import { KENYA_COUNTIES, countyByName } from "./kenya-locations";
 
@@ -227,7 +228,7 @@ export default function RegisterForm({ initialPlan }: { initialPlan?: string }) 
   return (
     <div className="reg-shell">
       <aside className="reg-rail">
-        <div><a href="/" className="back">← Back home</a></div>
+        <div><Link href="/" className="back">← Back home</Link></div>
         <SiteLogo tone="light" height={44} />
         <ol className="reg-steps">
           {STEPS.map((s, i) => {

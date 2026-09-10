@@ -1,3 +1,4 @@
+import Link from "next/link";
 import RegisterForm from "./RegisterForm";
 
 export default async function RegisterPage({
@@ -8,7 +9,7 @@ export default async function RegisterPage({
   const { plan } = await searchParams;
   return (
     <div>
-      <a href="/">← Back home</a>
+      <Link href="/">← Back home</Link>
       <h1>Get started</h1>
       <p>Create your account and your school — no manual setup needed.</p>
       <RegisterForm initialPlan={plan} />

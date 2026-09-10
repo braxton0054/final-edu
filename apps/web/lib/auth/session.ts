@@ -12,7 +12,16 @@ const COOKIE = "mtanda_session";
 const MAX_AGE = 7 * 24 * 60 * 60; // 7 days
 
 function key(): string {
-  return process.env.NEXTAUTH_SECRET ?? "dev-only-insecure-key";
+  const secret = process.env.NEXTAUTH_SECRET;
+  if (secret && secret.length > 0) return secret;
+  // A known fallback secret would make every session cookie forgeable, so
+  // never allow one in production.
+  if (process.env.NODE_ENV === "production") {
+    throw new Error(
+      "NEXTAUTH_SECRET is not set. Refusing to sign sessions with an insecure key in production."
+    );
+  }
+  return "dev-only-insecure-key";
 }
 
 function sign(data: string): string {

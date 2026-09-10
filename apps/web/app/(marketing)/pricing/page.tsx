@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { prisma } from "@mtanda/database";
 
 type PlanInfo = {
@@ -31,7 +32,7 @@ export default async function PricingPage() {
   return (
     <div className="lp">
       <div className="lp-container" style={{ padding: "3rem 1.25rem 4rem" }}>
-        <a href="/">← Back home</a>
+        <Link href="/">← Back home</Link>
         <span className="lp-eyebrow">Pricing</span>
         <h1 className="lp-h2">Simple plans that grow with your school</h1>
         <p className="lp-lead">

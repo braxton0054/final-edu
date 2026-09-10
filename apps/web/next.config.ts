@@ -1,13 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  transpilePackages: [
-    "@mtanda/database",
-    "@mtanda/auth",
-    "@mtanda/tenant",
-    "@mtanda/ui",
-    "@mtanda/validation",
-  ],
+  transpilePackages: ["@mtanda/database"],
 };
 
 export default nextConfig;
