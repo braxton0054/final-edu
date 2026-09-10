@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma, needsReminder, isExpired, deletionDue } from "@mtanda/database";
 import { sendMail } from "@/lib/email/mailer";
+import { brandedEmail } from "@/lib/email/templates";
 
 // Daily trial lifecycle runner (GitHub Actions cron → here, guarded by CRON_SECRET):
 // - TRIALING ending within 15 days → reminder email (margin math)
@@ -52,7 +53,10 @@ export async function POST(request: Request) {
         const mailed = await sendMail({
           to: sub.school.email,
           subject: `Your MtandaoLabs trial ends in 15 days — ${sub.school.name}`,
-          html: `<p>Hi ${sub.school.name},</p><p>Your <strong>${sub.plan.name}</strong> trial ends on ${sub.currentPeriodEnd.toDateString()}.</p><p>Continue for <strong>KSh ${Number(sub.plan.quarterlyPrice).toLocaleString()}/quarter</strong> — complete payment from your dashboard to avoid suspension.</p>`,
+          html: brandedEmail(
+            "Your trial ends soon",
+            `<p>Hi ${sub.school.name},</p><p>Your <strong>${sub.plan.name}</strong> trial ends on ${sub.currentPeriodEnd.toDateString()}.</p><p>Continue for <strong>KSh ${Number(sub.plan.quarterlyPrice).toLocaleString()} per 3 months</strong> — complete payment from your dashboard to avoid suspension.</p>`
+          ),
         });
         await prisma.auditLog.create({
           data: {
