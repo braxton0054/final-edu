@@ -120,7 +120,11 @@ export default async function EmailSettingsPage({
                     <option value={465}>465 (SSL)</option>
                   </select></label>
                 <label>Domain / Sender Address *
-                  <input name="fromEmail" type="email" required defaultValue={current?.fromEmail ?? ""} style={input} /></label>
+                  <input name="fromEmail" type="text" required defaultValue={current?.fromEmail ?? ""} style={input}
+                    placeholder="mtandaolabs.com or name@mtandaolabs.com" /></label>
+                <p style={{ margin: "-0.4rem 0 0" }}>
+                  <small style={{ color: "var(--muted)" }}>Domain only → sends as noreply@yourdomain.</small>
+                </p>
                 <label>Password 1 *
                   <input name="password" type="password" autoComplete="new-password"
                     placeholder={current ? "(stored — blank keeps it)" : ""} style={input} /></label>

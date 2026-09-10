@@ -25,7 +25,10 @@ export async function POST(request: Request) {
   const preset = PRESETS[provider] ?? PRESETS.smtp;
   const host = preset.host ?? String(form.get("host") ?? "").trim();
   const username = preset.userFixed ?? String(form.get("username") ?? "").trim();
-  const fromEmail = String(form.get("fromEmail") ?? "").trim().toLowerCase();
+  const fromRaw = String(form.get("fromEmail") ?? "").trim().toLowerCase();
+  // Accept a bare domain (mtandaolabs.com) or full address (a@b.com).
+  // Bare domain sends as noreply@domain.
+  const fromEmail = fromRaw.includes("@") ? fromRaw : `noreply@${fromRaw.replace(/^@+/, "")}`;
   const password = String(form.get("password") ?? "");
   const port = Math.max(1, Number(form.get("port")) || 587);
   const fail = (reason: string) =>
