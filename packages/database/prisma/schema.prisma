@@ -301,6 +301,7 @@ model SubscriptionPlan {
   minStudents      Int      @default(0)
   maxStudents      Int? // null = unlimited (Custom)
   graceStudents    Int      @default(2) // extra students before upgrade is required
+  trialDays        Int      @default(90) // free trial length, shown on pricing
   features         Json?
   active           Boolean  @default(true)
   displayOrder     Int      @default(0)

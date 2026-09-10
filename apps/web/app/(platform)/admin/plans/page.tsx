@@ -27,7 +27,7 @@ export default async function PlansPage() {
         <div className="admin-panel">
           <table className="admin-table">
             <thead>
-              <tr><th>Plan</th><th>Quarterly (KSh)</th><th>Min</th><th>Max</th><th>Grace</th><th>Schools</th><th>Active</th><th></th></tr>
+              <tr><th>Plan</th><th>Quarterly (KSh)</th><th>Min</th><th>Max</th><th>Grace</th><th>Trial (days)</th><th>Schools</th><th>Active</th><th></th></tr>
             </thead>
             <tbody>
               {plans.map((p) => {
@@ -50,6 +50,10 @@ export default async function PlansPage() {
                     <td>
                       <input name="graceStudents" form={formId} type="number" min={0}
                         defaultValue={p.graceStudents} style={{ ...input, width: "4rem" }} />
+                    </td>
+                    <td>
+                      <input name="trialDays" form={formId} type="number" min={0}
+                        defaultValue={p.trialDays} style={{ ...input, width: "4.5rem" }} />
                     </td>
                     <td>{p._count.subscriptions}</td>
                     <td><span className={`admin-badge ${p.active ? "green" : ""}`}>{p.active ? "ON" : "OFF"}</span></td>

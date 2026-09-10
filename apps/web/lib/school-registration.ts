@@ -142,7 +142,7 @@ export async function registerSchool(input: SchoolRegistrationInput) {
 
   const passwordHash = await hashPassword(input.password);
   const now = new Date();
-  const trialEnd = new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000);
+  const trialEnd = new Date(now.getTime() + plan.trialDays * 24 * 60 * 60 * 1000);
   const token = randomBytes(32).toString("hex");
   const tokenExpiry = new Date(now.getTime() + 24 * 60 * 60 * 1000);
 

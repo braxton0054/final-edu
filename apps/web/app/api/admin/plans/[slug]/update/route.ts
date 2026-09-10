@@ -39,6 +39,7 @@ export async function POST(
       maxStudents:
         maxStudents === null || maxStudents >= minStudents ? maxStudents : minStudents,
       graceStudents: Math.floor(num(form.get("graceStudents"), plan.graceStudents)),
+      trialDays: Math.max(0, Math.floor(num(form.get("trialDays"), plan.trialDays))),
     },
   });
   await prisma.auditLog.create({

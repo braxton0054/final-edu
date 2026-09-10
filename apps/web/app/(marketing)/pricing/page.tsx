@@ -15,6 +15,7 @@ export default async function PricingPage() {
     quarterlyPrice: Number(p.quarterlyPrice),
     minStudents: p.minStudents,
     maxStudents: p.maxStudents,
+    trialDays: p.trialDays,
     features: (p.features as string[] | null) ?? null,
   }));
 
@@ -39,6 +40,9 @@ export default async function PricingPage() {
               <p style={{ color: "#5b6470", fontSize: "0.9rem" }}>
                 per quarter · {p.minStudents.toLocaleString()}–
                 {p.maxStudents ? p.maxStudents.toLocaleString() : "+"} students
+              </p>
+              <p style={{ color: "var(--brand-accent-dark)", fontSize: "0.9rem", fontWeight: 700 }}>
+                {p.trialDays}-day free trial included
               </p>
               <ul>
                 {(p.features ?? []).map((f) => (

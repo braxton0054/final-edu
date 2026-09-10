@@ -8,6 +8,7 @@ const PLANS = [
     minStudents: 150,
     maxStudents: 250,
     graceStudents: 2,
+    trialDays: 90,
     features: ["Parent Portal", "Finance", "M-Pesa", "CBC", "Report Designer"],
     displayOrder: 1,
   },
@@ -18,6 +19,7 @@ const PLANS = [
     minStudents: 301,
     maxStudents: 600,
     graceStudents: 2,
+    trialDays: 90,
     features: [
       "Parent Portal",
       "Finance",
@@ -36,6 +38,7 @@ const PLANS = [
     minStudents: 601,
     maxStudents: 1000,
     graceStudents: 2,
+    trialDays: 90,
     features: [
       "Parent Portal",
       "Finance",
@@ -55,6 +58,7 @@ const PLANS = [
     minStudents: 1001,
     maxStudents: null,
     graceStudents: 0,
+    trialDays: 90,
     features: ["Negotiated platform fee", "Everything in Premium"],
     displayOrder: 4,
   },

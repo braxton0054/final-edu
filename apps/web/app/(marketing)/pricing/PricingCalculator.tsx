@@ -8,6 +8,7 @@ export type PlanInfo = {
   quarterlyPrice: number;
   minStudents: number;
   maxStudents: number | null;
+  trialDays: number;
   features: string[] | null;
 };
 

@@ -14,6 +14,7 @@ export async function GET() {
       quarterlyPrice: Number(p.quarterlyPrice),
       minStudents: p.minStudents,
       maxStudents: p.maxStudents,
+      trialDays: p.trialDays,
       features: p.features,
     }))
   );
