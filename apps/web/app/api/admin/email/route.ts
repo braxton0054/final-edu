@@ -28,15 +28,17 @@ export async function POST(request: Request) {
   const fromEmail = String(form.get("fromEmail") ?? "").trim().toLowerCase();
   const password = String(form.get("password") ?? "");
   const port = Math.max(1, Number(form.get("port")) || 587);
+  const fail = (reason: string) =>
+    NextResponse.redirect(new URL(`/admin/email?provider=${provider}&error=${encodeURIComponent(reason)}`, base()), 303);
   if (!host || !username || !fromEmail) {
-    return NextResponse.redirect(base(), 303);
+    return fail("Host, username, and sender address are required.");
   }
 
   const current = await prisma.platformEmailSettings.findFirst({
     orderBy: { updatedAt: "desc" },
   });
   if (!current && !password) {
-    return NextResponse.redirect(base(), 303);
+    return fail("A password is required for the first save.");
   }
 
   const data = {

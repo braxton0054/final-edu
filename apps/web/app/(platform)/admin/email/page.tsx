@@ -64,7 +64,7 @@ export default async function EmailSettingsPage({
 }: {
   searchParams: Promise<{ provider?: string }>;
 }) {
-  const { provider: providerParam } = await searchParams;
+  const { provider: providerParam, error: errorParam } = await searchParams;
   const current = await prisma.platformEmailSettings.findFirst({
     orderBy: { updatedAt: "desc" },
   });
@@ -93,6 +93,7 @@ export default async function EmailSettingsPage({
       <div className="admin-body">
         <div className="admin-panel" style={{ maxWidth: 640 }}>
           <h2>{preset.label} {badge}</h2>
+          {errorParam && <div className="reg-error">{errorParam}</div>}
           <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginBottom: "1rem" }}>
             {KEYS.map((k) => (
               <a
