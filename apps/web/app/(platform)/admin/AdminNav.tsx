@@ -15,6 +15,7 @@ const NAV: { label?: string; href?: string; title?: string }[] = [
   { title: "Plans & Pricing", href: "/admin/plans" },
   { title: "Email Settings", href: "/admin/email" },
   { title: "Payment Settings", href: "/admin/payment-settings" },
+  { title: "WhatsApp", href: "/admin/whatsapp" },
   { title: "Integrations", href: "/admin/integrations" },
   { title: "Domains", href: "/admin/domains" },
   { title: "Announcements", href: "/admin/announcements" },

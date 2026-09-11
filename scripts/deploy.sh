@@ -10,6 +10,11 @@ git pull --ff-only origin main
 echo "==> Installing dependencies"
 pnpm install --frozen-lockfile
 
+echo "==> Internal services: Evolution API (WhatsApp, loopback-only)"
+# Same deployment, no second VPS/domain: Evolution runs as a container bound
+# to 127.0.0.1:8080 and is only ever called by the SaaS backend.
+docker compose -f docker-compose.prod.yml up -d evolution
+
 echo "==> Database: generate + migrate"
 set -a
 # shellcheck disable=SC1091

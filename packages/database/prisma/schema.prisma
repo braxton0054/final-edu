@@ -64,6 +64,13 @@ enum PaymentStatus {
   REVERSED
 }
 
+enum WhatsAppStatus {
+  DISCONNECTED
+  CONNECTING
+  CONNECTED
+  ERROR
+}
+
 model School {
   id        String       @id @default(cuid())
   name      String
@@ -158,6 +165,7 @@ model School {
   platformInvoices PlatformInvoice[]
   platformPayments PlatformPayment[]
   verificationTokens EmailVerificationToken[]
+  whatsappConnections WhatsAppConnection[]
 
   @@map("schools")
 }
@@ -452,4 +460,57 @@ model PlatformAnnouncement {
   createdAt   DateTime @default(now())
 
   @@map("platform_announcements")
+}
+
+// ─── WhatsApp (Evolution API) — one instance per school ───
+// Evolution API runs as an internal service of this deployment (never exposed
+// publicly). Each school maps to exactly one Evolution instance so tenants are
+// isolated at the provider level as well as in the database. The per-instance
+// token is stored ENCRYPTED (AES-256-GCM) and never returned to the browser.
+
+model WhatsAppConnection {
+  id          String         @id @default(cuid())
+  schoolId    String
+  school      School         @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  instanceName String        @unique // evolution instance key, e.g. school_<schoolId>
+  instanceId  String? // Evolution's own instance id/hash, when returned
+  status      WhatsAppStatus @default(DISCONNECTED)
+  phoneNumber String?
+  tokenEnc    String? // encrypted per-instance API token (never exposed)
+  // Notification preferences controlled by the school admin.
+  notifyFees      Boolean @default(true)
+  notifyPayments  Boolean @default(true)
+  notifyResults   Boolean @default(true)
+  notifyAnnouncements Boolean @default(true)
+  lastError   String?
+  connectedAt DateTime?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  messages WhatsAppMessage[]
+
+  @@unique([schoolId])
+  @@map("whatsapp_connections")
+}
+
+// Outbound/inbound message log per school. Kept tenant-scoped so a school only
+// ever sees its own traffic; used for delivery status and debugging.
+model WhatsAppMessage {
+  id            String         @id @default(cuid())
+  schoolId      String
+  connectionId  String
+  connection    WhatsAppConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  direction     String // outbound | inbound
+  to            String?
+  from          String?
+  body          String?
+  category      String? // fee_invoice | payment_confirmation | receipt | ...
+  status        String   @default("PENDING") // PENDING | SENT | DELIVERED | READ | FAILED | RECEIVED
+  evolutionId   String?
+  error         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([schoolId, createdAt])
+  @@map("whatsapp_messages")
 }

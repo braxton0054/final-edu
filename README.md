@@ -67,3 +67,14 @@ Never commit `.env`; it is gitignored.
 Pushes to `main` trigger `.github/workflows/deploy.yml`, which SSHes to the VPS
 and runs `scripts/deploy.sh` (pull, install, migrate, build, restart, health
 check). Required repository secrets: `VPS_HOST`, `VPS_USER`, `VPS_SSH_KEY`.
+
+The same deploy also starts the internal Evolution API (WhatsApp) container
+(`docker-compose.prod.yml`, bound to `127.0.0.1:8080` only) — one push ships
+the whole SaaS, no second VPS or domain.
+
+## WhatsApp (Evolution API)
+
+WhatsApp is a native feature, not a separate product. Each school gets its own
+internal Evolution instance, managed from **Settings → WhatsApp** (connect, QR
+scan, status, disconnect, notification toggles) and monitored in
+**Super Admin → WhatsApp**. Full details: [`docs/whatsapp.md`](docs/whatsapp.md).
