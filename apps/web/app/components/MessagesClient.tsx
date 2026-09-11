@@ -39,16 +39,21 @@ export default function MessagesClient({
   classIds,
   basePath,
   canCompose,
+  audienceOptions,
 }: {
   classIds: string[];
   basePath: string;
   canCompose: boolean;
+  audienceOptions?: Array<"all_parents" | "class">;
 }) {
   const [items, setItems] = useState<ConversationSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [title, setTitle] = useState("");
   const [text, setText] = useState("");
-  const [audience, setAudience] = useState("all_parents");
+  const options = audienceOptions ?? ["all_parents", "class"];
+  const [audience, setAudience] = useState<string>(
+    options.includes("all_parents") ? "all_parents" : "class"
+  );
   const [classId, setClassId] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -122,8 +127,10 @@ export default function MessagesClient({
                   onChange={(e) => setAudience(e.target.value)}
                   style={{ display: "block", padding: "0.6rem", borderRadius: 8, border: "1px solid #ccc" }}
                 >
-                  <option value="all_parents">All parents</option>
-                  <option value="class">One class</option>
+                  {options.includes("all_parents") && (
+                    <option value="all_parents">All parents</option>
+                  )}
+                  {options.includes("class") && <option value="class">One class</option>}
                 </select>
               </label>
               {audience === "class" && (

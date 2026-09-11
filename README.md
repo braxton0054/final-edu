@@ -84,6 +84,7 @@ scan, status, disconnect, notification toggles) and monitored in
 
 Staff write to parents (whole school, a class, or specific families) from
 **Messages**; parents read and reply in the **Parent Portal → Inbox**.
-Parent logins are created by the school under **Parents**. The inbox is the
-system of record — other channels fan out from it. Details:
+Parent logins are created by the school under **Parents**. Teachers get an
+assignment-scoped portal (own classes, rosters, class-parent messaging).
+The inbox is the system of record — other channels fan out from it. Details:
 [`docs/messaging.md`](docs/messaging.md).

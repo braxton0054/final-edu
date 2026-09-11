@@ -124,8 +124,8 @@ export async function postMessage(opts: {
   return { id: message.id };
 }
 
-// Access: staff see every conversation of their school; parents only threads
-// they belong to. Returns null when access is denied.
+// Access: staff see every conversation of their school; teachers and parents
+// see only threads they belong to. Returns null when access is denied.
 export async function getConversationFor(
   schoolId: string,
   conversationId: string,
@@ -140,11 +140,8 @@ export async function getConversationFor(
   });
   if (!conversation) return null;
   if (userType === "SCHOOL_ADMIN" || userType === "STAFF") return conversation;
-  if (userType === "PARENT") {
-    const member = conversation.members.find((m) => m.userId === userId);
-    return member ? conversation : null;
-  }
-  return null;
+  const member = conversation.members.find((m) => m.userId === userId);
+  return member ? conversation : null;
 }
 
 export type ConversationSummary = {
@@ -339,4 +336,105 @@ export async function findParentByPhone(
     (c.phone ?? "").replace(/\D/g, "").endsWith(tail)
   );
   return hit?.id ?? null;
+}
+
+// ─── Teacher scoping (assignment-driven) ───
+// A teacher login links to a Teacher row via Teacher.userId; every class,
+// student, and thread they see resolves through TeacherAssignment. No row =
+// no scope (never fall back to whole-school access).
+
+export type TeacherScope = {
+  teacherId: string;
+  firstName: string | null;
+  lastName: string | null;
+  classes: { classId: string; learningAreas: string[]; roles: string[] }[];
+  classIds: string[];
+  isClassTeacher: boolean;
+};
+
+export async function teacherScope(
+  schoolId: string,
+  userId: string
+): Promise<TeacherScope | null> {
+  const teacher = await prisma.teacher.findFirst({
+    where: { schoolId, userId },
+    include: { assignments: true },
+  });
+  if (!teacher) return null;
+  const byClass = new Map<string, { learningAreas: string[]; roles: string[] }>();
+  for (const a of teacher.assignments) {
+    const entry = byClass.get(a.classId) ?? { learningAreas: [], roles: [] };
+    if (a.learningArea && !entry.learningAreas.includes(a.learningArea)) {
+      entry.learningAreas.push(a.learningArea);
+    }
+    if (!entry.roles.includes(a.role)) entry.roles.push(a.role);
+    byClass.set(a.classId, entry);
+  }
+  const classes = Array.from(byClass.entries()).map(([classId, v]) => ({
+    classId,
+    learningAreas: v.learningAreas,
+    roles: v.roles,
+  }));
+  return {
+    teacherId: teacher.id,
+    firstName: teacher.firstName,
+    lastName: teacher.lastName,
+    classes,
+    classIds: classes.map((c) => c.classId),
+    isClassTeacher: teacher.assignments.some((a) => a.role === "class_teacher"),
+  };
+}
+
+export async function teacherStudents(schoolId: string, classIds: string[]) {
+  if (classIds.length === 0) return [];
+  return prisma.student.findMany({
+    where: { schoolId, classId: { in: classIds } },
+    orderBy: [{ classId: "asc" }, { firstName: "asc" }],
+    take: 500,
+  });
+}
+
+export async function upsertAssignment(opts: {
+  schoolId: string;
+  teacherId: string;
+  classId: string;
+  learningArea?: string;
+  role: string;
+}) {
+  const teacher = await prisma.teacher.findFirst({
+    where: { id: opts.teacherId, schoolId: opts.schoolId },
+  });
+  if (!teacher) throw new Error("Teacher not found in this school.");
+  const role = opts.role === "class_teacher" ? "class_teacher" : "subject_teacher";
+  const classId = opts.classId.trim();
+  const learningArea = opts.learningArea?.trim() || null;
+  if (!classId) throw new Error("A class is required.");
+  // NULL learningArea never matches a unique row in Postgres, so handle it
+  // with an explicit find instead of upsert.
+  const existing = await prisma.teacherAssignment.findFirst({
+    where: { teacherId: opts.teacherId, classId, learningArea },
+  });
+  if (existing) {
+    return prisma.teacherAssignment.update({ where: { id: existing.id }, data: { role } });
+  }
+  return prisma.teacherAssignment.create({
+    data: { schoolId: opts.schoolId, teacherId: opts.teacherId, classId, learningArea, role },
+  });
+}
+
+export async function removeAssignment(schoolId: string, assignmentId: string) {
+  const row = await prisma.teacherAssignment.findFirst({
+    where: { id: assignmentId, schoolId },
+  });
+  if (!row) throw new Error("Assignment not found.");
+  await prisma.teacherAssignment.delete({ where: { id: assignmentId } });
+}
+
+export async function listAssignments(schoolId: string) {
+  return prisma.teacherAssignment.findMany({
+    where: { schoolId },
+    orderBy: [{ classId: "asc" }, { learningArea: "asc" }],
+    include: { teacher: { select: { id: true, firstName: true, lastName: true } } },
+    take: 500,
+  });
 }

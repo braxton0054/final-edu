@@ -53,3 +53,43 @@ export async function requireParentActor(): Promise<ParentActor> {
   }
   return { ok: true, schoolId: session.schoolId, userId: session.userId, email: session.email };
 }
+
+export type TeacherActor =
+  | { ok: true; schoolId: string; userId: string; email: string }
+  | { ok: false; status: 401 | 403; error: string };
+
+// Requires a signed-in teacher with a school attached. Teachers never use
+// the school-admin surface; their scope resolves via TeacherAssignment.
+export async function requireTeacherActor(): Promise<TeacherActor> {
+  const session = await tenantSession();
+  if (!session) {
+    return { ok: false, status: 401, error: "Sign in to continue." };
+  }
+  if (session.userType !== "TEACHER" || !session.schoolId) {
+    return { ok: false, status: 403, error: "This area is for teacher accounts." };
+  }
+  return { ok: true, schoolId: session.schoolId, userId: session.userId, email: session.email };
+}
+
+export type SchoolUser =
+  | { ok: true; schoolId: string; userId: string; userType: string }
+  | { ok: false; status: 401 | 403; error: string };
+
+// Any school-attached login: staff, teacher, or parent. Callers narrow by
+// userType for their own authorization (staff = whole school, teacher and
+// parent = membership-scoped).
+export async function requireSchoolUser(): Promise<SchoolUser> {
+  const staff = await requireSchoolActor();
+  if (staff.ok) {
+    return { ok: true, schoolId: staff.schoolId, userId: staff.userId, userType: staff.userType };
+  }
+  const teacher = await requireTeacherActor();
+  if (teacher.ok) {
+    return { ok: true, schoolId: teacher.schoolId, userId: teacher.userId, userType: "TEACHER" };
+  }
+  const parent = await requireParentActor();
+  if (parent.ok) {
+    return { ok: true, schoolId: parent.schoolId, userId: parent.userId, userType: "PARENT" };
+  }
+  return { ok: false, status: parent.status, error: parent.error };
+}

@@ -123,8 +123,10 @@ export default async function proxy(request: NextRequest) {
       session.userType === "PLATFORM_ADMIN"
         ? "/admin/dashboard"
         : session.userType === "PARENT"
-          ? "/parent/inbox"
-          : "/dashboard";
+          ? "/parent/home"
+          : session.userType === "TEACHER"
+            ? "/teacher/dashboard"
+            : "/dashboard";
     return NextResponse.redirect(new URL(target, request.url));
   }
 

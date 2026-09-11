@@ -168,6 +168,7 @@ model School {
   whatsappConnections WhatsAppConnection[]
   conversations Conversation[]
   studentGuardians StudentGuardian[]
+  teacherAssignments TeacherAssignment[]
 
   @@map("schools")
 }
@@ -224,6 +225,8 @@ model Teacher {
   lastName  String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  assignments TeacherAssignment[]
 
   @@map("teachers")
 }
@@ -540,6 +543,25 @@ model StudentGuardian {
   @@index([schoolId, studentId])
   @@index([parentId])
   @@map("student_guardians")
+}
+
+// A teacher's assignment: which class they teach, what learning area, and in
+// what role. One teacher can hold many (class teacher + subject teacher).
+// All teacher scoping (classes, students, messages) resolves through this.
+model TeacherAssignment {
+  id           String   @id @default(cuid())
+  schoolId     String
+  school       School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  teacherId    String
+  teacher      Teacher  @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  classId      String // matches Student.classId
+  learningArea String? // e.g. Mathematics
+  role         String   @default("subject_teacher") // class_teacher | subject_teacher
+  createdAt    DateTime @default(now())
+
+  @@unique([teacherId, classId, learningArea])
+  @@index([schoolId, classId])
+  @@map("teacher_assignments")
 }
 
 // ─── WhatsApp (Evolution API) — one instance per school ───

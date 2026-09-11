@@ -28,6 +28,24 @@ Migration: `packages/database/prisma/migrations/*_messaging/migration.sql`.
    which posts to the inbox by default (`channels: ["inapp"]`, WhatsApp kept
    for later via `channels: ["whatsapp"]`).
 
+## Teacher portal (assignment-scoped)
+
+Teachers sign in with `TEACHER` logins (created on the staff Teachers page and
+linked to a teacher row). Everything they see resolves via `TeacherAssignment`
+(class + learning area + class/subject role): assigned classes, rosters,
+member-only threads, and compose limited to their classes' parents. No
+assignment = no access — never whole-school fallback. Staff manage assignments
+on the Teachers page.
+
+## Parent portal (mobile-first)
+
+Bottom-tab layout: Home (greeting, children with live fee balances, quick
+actions, recent threads), Children (profiles + per-child invoices/payments),
+Fees (per-child and total statements — online payment arrives with the
+school's M-Pesa setup), Messages (existing inbox), Profile (account, children,
+sign out). Every read filters by the parent's linked children; attendance,
+results, assignments, and report cards arrive with those modules.
+
 ## Isolation
 
 - Every query filters by `schoolId` from the verified session.
