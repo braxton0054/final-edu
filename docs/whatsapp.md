@@ -46,7 +46,7 @@ Public surface: only the SaaS domain. Internal: Evolution on a loopback port.
 
 | Variable | Purpose |
 | --- | --- |
-| `EVOLUTION_API_URL` | Internal Evolution base URL. Dev: `http://localhost:8080`. VPS: `http://127.0.0.1:8081` (our own container; an unrelated service already uses `:8080`). |
+| `EVOLUTION_API_URL` | Internal Evolution base URL. Dev: `http://localhost:8080`. VPS: `http://127.0.0.1:8091` (our own container; an unrelated service already uses `:8080`). |
 | `EVOLUTION_API_KEY` | Master key (`AUTHENTICATION_API_KEY` on the Evolution side). Server-only. **Must be identical in the SaaS `.env` and the compose environment** (dev compose defaults to `evolution-dev-key` — set the same value in your `.env`). |
 | `EVOLUTION_WEBHOOK_SECRET` | Shared secret Evolution sends back on every event (`?secret=`). Generate with `openssl rand -hex 32`. Webhooks are skipped until this is set. |
 | `EVOLUTION_WEBHOOK_URL` | Optional override for the callback base. Defaults follow this process's `PORT` via `host.docker.internal` (dev `:3000`, VPS `:8093`) — correct out of the box in both setups. |
@@ -112,14 +112,18 @@ ships (WhatsApp reports "not configured" until fixed).
 
 One-time VPS setup (`/opt/final-edu/.env`):
 
-1. `EVOLUTION_API_URL=http://127.0.0.1:8081`
+1. `EVOLUTION_API_URL=http://127.0.0.1:8091`
 2. `EVOLUTION_API_KEY=<master key>` — same value Evolution boots with.
 3. `EVOLUTION_WEBHOOK_SECRET=<openssl rand -hex 32>`
 4. `EVOLUTION_WEBHOOK_URL` — optional; without it the callback follows the
    app's `PORT` via `host.docker.internal` (`:8093` on systemd), which is
    already correct.
-5. Create Evolution's database once:
-   `psql "$DATABASE_URL" -c "CREATE DATABASE evolution;"`
+5. Create Evolution's own database/role once on the host postgres (isolated
+   from the SaaS schema; pg_hba already permits bridge connections):
+   `su postgres -c "psql -c \"CREATE ROLE evo_edu LOGIN PASSWORD '<strong>';\""`
+   `su postgres -c "psql -c \"CREATE DATABASE evolution_edu OWNER evo_edu;\""`
+   then `EVOLUTION_DB_URI=postgresql://evo_edu:<strong>@host.docker.internal:5432/evolution_edu`.
+   Evolution uses local caching (single container), so host redis is untouched.
 6. Allow the container to reach host postgres/redis
    (`host.docker.internal` via `extra_hosts`, `listen_addresses` + `pg_hba`).
 7. Push to `main`; verify `https://<saas>/api/health`,
