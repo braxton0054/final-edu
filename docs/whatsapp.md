@@ -1,5 +1,9 @@
 # WhatsApp (Evolution API) — internal integration
 
+> Tested against Evolution API **v2.3.7** (`evoapicloud/evolution-api`).
+> The endpoint shapes below (`/instance/*`, `/webhook/*`, `/message/*`) were
+> verified live against that version during provisioning.
+
 WhatsApp is a native SaaS feature. School admins never see or touch Evolution
 API: they open **Settings → WhatsApp**, scan a QR code, and the platform does
 the rest. Evolution runs as an **internal service of this deployment** — one
