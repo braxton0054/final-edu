@@ -42,7 +42,10 @@ services:
       DEL_INSTANCE: "false"
       TELEMETRY: "false"
     ports:
-      - "127.0.0.1:8080:8080"
+      # Loopback-only. Host port 8081: 8080 is already taken on this VPS by an
+      # unrelated project's Evolution (wa-api); ours stays fully separate.
+      # SaaS talks to it at EVOLUTION_API_URL=http://127.0.0.1:8081.
+      - "127.0.0.1:${EVOLUTION_HOST_PORT:-8081}:8080"
     restart: unless-stopped
     healthcheck:
       # Node image has no wget/curl — probe with node itself, including the
