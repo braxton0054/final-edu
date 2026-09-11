@@ -23,11 +23,17 @@ const SCHEMAS: Record<string, { secrets: string[]; plain: string[] }> = {
 
 // Save a provider's credentials (Super Admin only — enforced in proxy).
 export async function POST(request: Request) {
+  const wantsJson = (request.headers.get("accept") ?? "").includes("application/json");
+  const done = (ok: boolean, error?: string, status = 200) =>
+    wantsJson
+      ? NextResponse.json(ok ? { ok: true } : { ok: false, error }, { status })
+      : NextResponse.redirect(base(), ok ? 303 : 303);
+
   const form = await request.formData().catch(() => null);
-  if (!form) return NextResponse.redirect(base(), 303);
+  if (!form) return done(false, "Could not read the form.", 400);
   const provider = String(form.get("provider") ?? "");
   const schema = SCHEMAS[provider];
-  if (!schema) return NextResponse.redirect(base(), 303);
+  if (!schema) return done(false, "Unknown provider.", 400);
 
   const current = await prisma.paymentProviderConfig.findUnique({ where: { provider } });
   const prev: Record<string, string> = current
@@ -42,7 +48,9 @@ export async function POST(request: Request) {
     // Blank secret = keep the stored one.
     next[field] = value || (schema.secrets.includes(field) ? prev[field] ?? "" : "");
   }
-  if (schema.secrets.some((f) => !next[f])) return NextResponse.redirect(base(), 303);
+  if (schema.secrets.some((f) => !next[f])) {
+    return done(false, "All required secrets must be provided.", 400);
+  }
 
   const data = {
     environment: String(form.get("environment") ?? "sandbox"),
@@ -62,5 +70,5 @@ export async function POST(request: Request) {
       metadata: { provider },
     },
   });
-  return NextResponse.redirect(base(), 303);
+  return done(true);
 }
