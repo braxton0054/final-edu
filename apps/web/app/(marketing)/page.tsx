@@ -366,8 +366,8 @@ export default async function MarketingHome() {
           <span className="lp-eyebrow">Communication</span>
           <h2 className="lp-h2">Keep parents connected</h2>
           <p className="lp-lead">
-            WhatsApp, email, and in-app notifications — each school connects its
-            own Evolution API instance and email configuration.
+            WhatsApp built in — connect the school&apos;s number by scanning a
+            QR code. Email and in-app notifications included.
           </p>
           <div className="lp-grid-3" style={{ textAlign: "left" }}>
             <div className="lp-card">
@@ -434,7 +434,7 @@ export default async function MarketingHome() {
             <li>Its own report-card templates</li>
             <li>Its own M-Pesa configuration</li>
             <li>Its own email configuration</li>
-            <li>Its own WhatsApp configuration</li>
+            <li>Its own WhatsApp number</li>
           </ul>
         </div>
       </section>
@@ -596,7 +596,10 @@ export default async function MarketingHome() {
             <details>
               <summary>Can I connect WhatsApp?</summary>
               <p>
-                Yes, schools can configure their own Evolution API integration.
+                Yes. Connect your school&apos;s WhatsApp number from your
+                dashboard by scanning a QR code — no technical setup needed.
+                Fee reminders, payment confirmations, and announcements then
+                go out over WhatsApp automatically.
               </p>
             </details>
             <details>

@@ -121,8 +121,7 @@ export default function WhatsAppPanel({ initial }: Props) {
     <div style={{ display: "grid", gap: "1.25rem", maxWidth: 640 }}>
       {!view.configured && (
         <div style={{ border: "1px solid #f0c36d", background: "#fff8e6", borderRadius: 10, padding: "0.9rem 1.1rem" }}>
-          WhatsApp is not enabled on this platform yet. Ask your platform
-          administrator to configure the internal WhatsApp service.
+          WhatsApp isn&apos;t available right now. Please try again later.
         </div>
       )}
 

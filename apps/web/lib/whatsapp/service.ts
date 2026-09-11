@@ -84,7 +84,7 @@ export async function connect(schoolId: string): Promise<QrResult> {
       ok: false,
       status: "ERROR",
       error:
-        "WhatsApp is not enabled on this platform yet. Contact your administrator.",
+        "WhatsApp is not available right now. Please try again later or contact support.",
     };
   }
 
@@ -189,7 +189,7 @@ export async function disconnect(schoolId: string): Promise<{ ok: boolean; error
   const connection = await getConnection(schoolId);
   if (!connection) return { ok: true };
   if (!evolutionConfigured()) {
-    return { ok: false, error: "WhatsApp service is not configured." };
+    return { ok: false, error: "WhatsApp is not available right now. Please try again later." };
   }
   const out = await logoutInstance(connection.instanceName);
   if (!out.ok) return { ok: false, error: out.error };
@@ -221,7 +221,7 @@ export async function restart(schoolId: string): Promise<QrResult> {
   const connection = await getConnection(schoolId);
   if (!connection) return connect(schoolId);
   if (!evolutionConfigured()) {
-    return { ok: false, status: "ERROR", error: "WhatsApp service is not configured." };
+    return { ok: false, status: "ERROR", error: "WhatsApp is not available right now. Please try again later." };
   }
   const r = await restartInstance(connection.instanceName);
   if (!r.ok) return { ok: false, status: "ERROR", error: r.error };
@@ -261,11 +261,11 @@ export async function sendMessage(
   if (connection.status !== "CONNECTED") {
     return {
       ok: false,
-      error: "WhatsApp is not connected. Ask the school admin to reconnect.",
+      error: "WhatsApp is not connected. Reconnect it from Settings → WhatsApp.",
     };
   }
   if (!evolutionConfigured()) {
-    return { ok: false, error: "WhatsApp service is not configured." };
+    return { ok: false, error: "WhatsApp is not available right now. Please try again later." };
   }
 
   const number = normaliseMsisdn(to);

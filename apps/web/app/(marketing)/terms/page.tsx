@@ -38,10 +38,11 @@ export default function Page() {
 
       <h2>Third-party integrations</h2>
       <p>
-        Payment, email, and WhatsApp features depend on providers that each
-        school configures (for example M-Pesa, an SMTP provider, or Evolution
-        API). Availability and fees for those services are governed by the
-        provider, not by MtandaoLabsEdu.
+        Payment and email features depend on providers that each school
+        configures (for example M-Pesa or an SMTP provider). WhatsApp is
+        built in — connect a number from Settings → WhatsApp. Availability
+        and fees for third-party services are governed by the provider, not
+        by MtandaoLabsEdu.
       </p>
 
       <h2>Acceptable use</h2>

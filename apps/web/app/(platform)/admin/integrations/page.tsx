@@ -1,7 +1,7 @@
 const ROWS = [
   { name: "M-Pesa (Daraja)", detail: "Per-school credentials, encrypted in DB. Callbacks at /api/webhooks/mpesa.", status: "Scaffolded" },
   { name: "Email (SMTP)", detail: "Per-school provider config in tenant settings.", status: "Scaffolded" },
-  { name: "WhatsApp (Evolution API)", detail: "One internal instance per school. Managed from tenant Settings → WhatsApp; monitored in Super Admin → WhatsApp.", status: "Live" },
+  { name: "WhatsApp", detail: "Built-in messaging. One number per school, managed from tenant Settings → WhatsApp; monitored in Super Admin → WhatsApp.", status: "Live" },
   { name: "Storage (S3-compatible)", detail: "Document buckets per school.", status: "Planned" },
   { name: "Public API", detail: "Scoped keys per school.", status: "Planned" },
 ];

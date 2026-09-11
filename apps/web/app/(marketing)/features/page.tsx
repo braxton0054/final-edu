@@ -58,7 +58,7 @@ const CAPABILITIES: Capability[] = [
       "Keep parents informed through the channels they already use.",
     points: [
       "Parent portal with children, fees, and results",
-      "WhatsApp messaging via Evolution API",
+      "WhatsApp messaging with QR-code setup",
       "Email notifications and announcements",
       "Fee reminders and payment confirmations",
     ],
