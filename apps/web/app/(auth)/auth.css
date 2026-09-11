@@ -117,6 +117,49 @@ button.current .reg-step-text small {
   text-decoration: none;
 }
 
+/* ---------- Mini step list (password recovery rail) ---------- */
+.reg-mini-steps {
+  list-style: none;
+  padding: 0;
+  margin: 1.25rem 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  font-size: 0.92rem;
+  color: #cfd6d1;
+}
+
+.reg-mini-steps li {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.reg-mini-dot {
+  width: 1.6rem;
+  height: 1.6rem;
+  flex-shrink: 0;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.78rem;
+  border: 1.5px solid #4a545e;
+  color: #9aa4ae;
+}
+
+.reg-mini-steps li.current .reg-mini-dot {
+  border-color: var(--brand-accent);
+  color: var(--brand-accent);
+}
+
+.reg-mini-steps li.done .reg-mini-dot {
+  background: var(--brand-accent);
+  border-color: var(--brand-accent);
+  color: #101418;
+}
+
 /* ---------- Right content ---------- */
 .reg-main {
   flex: 1;
