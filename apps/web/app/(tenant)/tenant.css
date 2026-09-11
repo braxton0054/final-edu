@@ -1,0 +1,493 @@
+/* Tenant (school admin) shell: sidebar + topbar + dashboard widgets.
+   Uses the app-wide theme tokens (--bg, --ink, --line, --muted, --brand-accent). */
+
+.tenant-shell {
+  display: flex;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--ink);
+}
+
+/* ---------- Sidebar ---------- */
+.tenant-side {
+  width: 248px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--line);
+  padding: 1.1rem 0.9rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  background: var(--bg);
+}
+
+.tenant-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.25rem 0.5rem 1rem;
+}
+
+.tenant-brand-mark {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 9px;
+  background: var(--brand-accent);
+  color: #101418;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+.tenant-brand-name {
+  font-weight: 800;
+  font-size: 0.92rem;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tenant-nav-group {
+  margin-top: 0.9rem;
+}
+
+.tenant-nav-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  width: 100%;
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.45rem 0.5rem;
+  cursor: pointer;
+  border-radius: 8px;
+}
+
+.tenant-nav-toggle:hover {
+  color: var(--ink);
+}
+
+.tenant-nav-toggle .chev {
+  margin-left: auto;
+  font-size: 0.7rem;
+}
+
+.tenant-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.6rem;
+  border-radius: 8px;
+  color: var(--ink);
+  text-decoration: none;
+  font-size: 0.93rem;
+}
+
+.tenant-nav-link:hover {
+  background: rgba(127, 127, 127, 0.12);
+}
+
+.tenant-nav-link.active {
+  background: rgba(245, 158, 11, 0.14);
+  font-weight: 700;
+}
+
+.tenant-nav-badge {
+  margin-left: auto;
+  background: #f59e0b;
+  color: #101418;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  padding: 0.05rem 0.45rem;
+}
+
+.tenant-side-foot {
+  margin-top: auto;
+  padding: 1rem 0.5rem 0;
+  border-top: 1px solid var(--line);
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.tenant-usage-bar {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--line);
+  overflow: hidden;
+  margin-top: 0.4rem;
+}
+
+.tenant-usage-bar > span {
+  display: block;
+  height: 100%;
+  background: var(--brand-accent);
+}
+
+/* ---------- Main + topbar ---------- */
+.tenant-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.tenant-top {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.8rem 1.5rem;
+  border-bottom: 1px solid var(--line);
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+  z-index: 10;
+}
+
+.tenant-top-school {
+  font-weight: 800;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tenant-plan-badge {
+  font-size: 0.72rem;
+  font-weight: 800;
+  border: 1.5px solid var(--brand-accent);
+  color: var(--brand-accent-dark);
+  border-radius: 999px;
+  padding: 0.1rem 0.6rem;
+  white-space: nowrap;
+}
+
+.tenant-top-spacer {
+  flex: 1;
+}
+
+.tenant-icon-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.3rem;
+  height: 2.3rem;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--ink);
+  text-decoration: none;
+  font-size: 1.05rem;
+}
+
+.tenant-icon-btn:hover {
+  border-color: var(--brand-accent);
+}
+
+.tenant-icon-count {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: #c8102e;
+  color: #fff;
+  border-radius: 999px;
+  font-size: 0.66rem;
+  font-weight: 800;
+  padding: 0.05rem 0.35rem;
+}
+
+.tenant-user details {
+  position: relative;
+}
+
+.tenant-user summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0.35rem 0.7rem 0.35rem 0.35rem;
+}
+
+.tenant-user summary::-webkit-details-marker {
+  display: none;
+}
+
+.tenant-avatar {
+  width: 1.7rem;
+  height: 1.7rem;
+  border-radius: 50%;
+  background: var(--brand-accent);
+  color: #101418;
+  font-weight: 800;
+  font-size: 0.8rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tenant-user-name {
+  font-size: 0.88rem;
+  font-weight: 700;
+  max-width: 10rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tenant-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.5rem);
+  min-width: 220px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--bg);
+  padding: 0.75rem;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+  z-index: 20;
+}
+
+.tenant-menu-meta {
+  font-size: 0.8rem;
+  color: var(--muted);
+  padding: 0 0.25rem 0.6rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tenant-menu button {
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  color: var(--ink);
+  padding: 0.55rem 0.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.92rem;
+}
+
+.tenant-menu button:hover {
+  background: rgba(127, 127, 127, 0.12);
+}
+
+.tenant-content {
+  padding: 1.5rem;
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* ---------- Dashboard widgets ---------- */
+.dash-greet {
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.dash-sub {
+  color: var(--muted);
+  margin: 0.3rem 0 1.4rem;
+  font-size: 0.92rem;
+}
+
+.dash-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.dash-stat {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 1.1rem 1.25rem;
+  background: var(--bg);
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
+a.dash-stat:hover {
+  border-color: var(--brand-accent);
+}
+
+.dash-stat-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.dash-stat-value {
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 0.15rem 0;
+}
+
+.dash-stat-sub {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.dash-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.dash-panel {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 1.1rem 1.25rem;
+  background: var(--bg);
+}
+
+.dash-panel h2 {
+  margin: 0 0 0.9rem;
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.dash-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.75rem;
+  padding: 0.45rem 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 0.93rem;
+}
+
+.dash-row:last-child {
+  border-bottom: none;
+}
+
+.dash-row .k {
+  color: var(--muted);
+}
+
+.dash-row .v {
+  font-weight: 700;
+  text-align: right;
+}
+
+.dash-link {
+  display: inline-block;
+  margin-top: 0.8rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--brand-accent-dark);
+  text-decoration: none;
+}
+
+.dash-activity {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 0.55rem;
+  font-size: 0.92rem;
+}
+
+.dash-activity li {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+}
+
+.dash-dot {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  background: var(--brand-accent);
+  flex-shrink: 0;
+  margin-top: 0.4rem;
+}
+
+.dash-dot.warn {
+  background: #d97706;
+}
+
+.dash-checklist {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 0.4rem;
+  font-size: 0.92rem;
+}
+
+.dash-checklist li {
+  display: flex;
+  gap: 0.55rem;
+  align-items: center;
+}
+
+/* ---------- Simple tables ---------- */
+.dash-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+
+.dash-table th,
+.dash-table td {
+  text-align: left;
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.dash-table th {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+
+.dash-muted {
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 900px) {
+  .tenant-side {
+    display: none;
+  }
+
+  .dash-stats,
+  .dash-grid-2 {
+    grid-template-columns: 1fr;
+  }
+
+  .tenant-content {
+    padding: 1rem;
+  }
+
+  .tenant-user-name {
+    display: none;
+  }
+}
