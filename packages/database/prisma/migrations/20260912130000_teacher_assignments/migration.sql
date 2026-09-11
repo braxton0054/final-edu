@@ -12,7 +12,7 @@ CREATE TABLE "teacher_assignments" (
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "teacher_assignments_teacherId_classId_learningArea_key" ON "teacher_assignments"("teacherId", "classId", "learningArea");
+CREATE INDEX "teacher_assignments_teacherId_classId_idx" ON "teacher_assignments"("teacherId", "classId");
 
 -- CreateIndex
 CREATE INDEX "teacher_assignments_schoolId_classId_idx" ON "teacher_assignments"("schoolId", "classId");

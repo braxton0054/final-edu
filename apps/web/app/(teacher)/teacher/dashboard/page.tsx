@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@mtanda/database";
 import { requireTeacherActor } from "@/lib/auth/tenant-actor";
 import { listConversationsFor, teacherScope, teacherStudents } from "@/lib/messaging/service";
+import { pendingMarking } from "@/lib/academics/service";
 
 export const dynamic = "force-dynamic";
 
@@ -28,9 +29,10 @@ export default async function TeacherDashboard() {
     redirect("/login?next=/teacher/dashboard");
   }
 
-  const [students, conversations] = await Promise.all([
+  const [students, conversations, marking] = await Promise.all([
     teacherStudents(actor.schoolId, scope.classIds),
     listConversationsFor({ schoolId: actor.schoolId, userId: actor.userId, userType: "TEACHER" }),
+    pendingMarking(actor.schoolId, scope.classIds),
   ]);
 
   const displayName =
@@ -86,6 +88,23 @@ export default async function TeacherDashboard() {
               <div className="dash-stat-sub">{learningAreas.slice(0, 3).join(", ") || "—"}</div>
             </div>
           </div>
+
+          {marking.length > 0 && (
+            <div className="dash-panel" style={{ marginBottom: "1rem" }}>
+              <h2>Awaiting marking</h2>
+              {marking.slice(0, 4).map((m) => (
+                <div className="dash-row" key={m.id}>
+                  <span className="k">
+                    <Link href={`/teacher/assessments/${m.id}`} style={{ color: "inherit", textDecoration: "none" }}>
+                      {m.title} · {m.classId}
+                    </Link>
+                  </span>
+                  <span className="v" style={{ fontSize: "0.85rem" }}>{m.missing} missing</span>
+                </div>
+              ))}
+              <Link className="dash-link" href="/teacher/results">View results →</Link>
+            </div>
+          )}
 
           <div className="dash-grid-2">
             <div className="dash-panel">

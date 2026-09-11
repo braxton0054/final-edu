@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { prisma } from "@mtanda/database";
 import { requireSchoolActor } from "@/lib/auth/tenant-actor";
+import SchoolMpesaConfig from "./SchoolMpesaConfig";
 
 export const dynamic = "force-dynamic";
 
@@ -42,6 +43,8 @@ export default async function FinancePage() {
     <div>
       <h1 className="dash-greet">Finance</h1>
       <p className="dash-sub">Invoices, payments, and totals.</p>
+
+      <SchoolMpesaConfig />
 
       <div className="dash-stats" style={{ gridTemplateColumns: "repeat(2, 1fr)" }}>
         <div className="dash-stat">

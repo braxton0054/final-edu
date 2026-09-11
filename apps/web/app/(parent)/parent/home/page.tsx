@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { requireParentActor } from "@/lib/auth/tenant-actor";
 import { listConversationsFor } from "@/lib/messaging/service";
+import { attendanceSummary } from "@/lib/academics/service";
 import { parentChildren, childName, fmtKES } from "@/lib/parent/service";
 
 export const dynamic = "force-dynamic";
@@ -30,6 +31,10 @@ export default async function ParentHomePage() {
 
   const unread = conversations.reduce((sum, c) => sum + c.unread, 0);
   const totalOutstanding = children.reduce((sum, c) => sum + c.outstanding, 0);
+  const attendance = await Promise.all(
+    children.map((c) => attendanceSummary(parent.schoolId, c.studentId))
+  );
+  const rateByStudent = new Map(children.map((c, i) => [c.studentId, attendance[i].rate]));
 
   return (
     <div>
@@ -59,6 +64,10 @@ export default async function ParentHomePage() {
                 <br />
                 <span className="parent-child-sub">
                   {c.classId ?? "No class"} ·{" "}
+                  {(() => {
+                    const rate = rateByStudent.get(c.studentId);
+                    return rate !== null && rate !== undefined ? `Attendance ${rate}% · ` : "";
+                  })()}
                   {c.outstanding > 0
                     ? `Balance ${fmtKES(c.outstanding)}`
                     : "Fees cleared"}

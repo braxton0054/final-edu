@@ -16,7 +16,7 @@ packages/
   */          Reserved packages (auth, payments, email, ...) — not implemented
 scripts/      deploy.sh, health-check.ts
 .github/      CI, deploy, and trial-lifecycle workflows
-docs/         whatsapp.md, messaging.md
+docs/         whatsapp.md, messaging.md, academics.md
 ```
 
 The application currently lives almost entirely in `apps/web` and
@@ -88,3 +88,10 @@ Parent logins are created by the school under **Parents**. Teachers get an
 assignment-scoped portal (own classes, rosters, class-parent messaging).
 The inbox is the system of record — other channels fan out from it. Details:
 [`docs/messaging.md`](docs/messaging.md).
+
+## Academics + fee payments
+
+Attendance, assessments (spreadsheet mark entry, finalize lock), CBC levels,
+assignments, class/student results, printable report cards, and parent M-Pesa
+fee payment against the school's own Daraja credentials. Details:
+[`docs/academics.md`](docs/academics.md).

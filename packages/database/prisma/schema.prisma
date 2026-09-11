@@ -169,6 +169,9 @@ model School {
   conversations Conversation[]
   studentGuardians StudentGuardian[]
   teacherAssignments TeacherAssignment[]
+  assessments Assessment[]
+  attendanceRecords AttendanceRecord[]
+  paymentConfig SchoolPaymentConfig?
 
   @@map("schools")
 }
@@ -192,6 +195,8 @@ model User {
   conversationMemberships ConversationMember[]
   sentMessages ConversationMessage[] @relation("MessageSender")
   guardianships StudentGuardian[] @relation("GuardianParent")
+  createdAssessments Assessment[] @relation("AssessmentCreator")
+  markedAttendance AttendanceRecord[] @relation("AttendanceMarker")
 
   @@unique([schoolId, email])
   @@map("users")
@@ -211,6 +216,8 @@ model Student {
   invoices Invoice[]
   payments Payment[]
   guardians StudentGuardian[]
+  assessmentScores AssessmentScore[]
+  attendanceRecords AttendanceRecord[]
 
   @@unique([schoolId, admissionNo])
   @@map("students")
@@ -293,6 +300,7 @@ model Payment {
   method        PaymentMethod @default(MANUAL)
   status        PaymentStatus @default(PENDING)
   mpesaReceipt  String?       @unique
+  externalRef   String?       @unique // STK CheckoutRequestID / provider ref
   createdAt     DateTime      @default(now())
 
   @@map("payments")
@@ -545,6 +553,92 @@ model StudentGuardian {
   @@map("student_guardians")
 }
 
+// ─── Academics: attendance, assessments, scores ───
+// Classes are identified by the classId string already used on Student and
+// TeacherAssignment — no separate Class table. Scores lock when an assessment
+// is finalized; only staff can reopen.
+
+model AttendanceRecord {
+  id         String   @id @default(cuid())
+  schoolId   String
+  school     School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  studentId  String
+  student    Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  classId    String
+  date       DateTime @db.Date
+  status     String   @default("present") // present | absent | late | excused
+  markedById String?
+  markedBy   User?    @relation("AttendanceMarker", fields: [markedById], references: [id], onDelete: SetNull)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([studentId, date])
+  @@index([schoolId, classId, date])
+  @@map("attendance_records")
+}
+
+model Assessment {
+  id           String    @id @default(cuid())
+  schoolId     String
+  school       School    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  classId      String
+  learningArea String?
+  title        String
+  type         String    @default("test") // assignment | quiz | test | exam | cbc
+  term         String?
+  maxScore     Decimal?  @db.Decimal(8, 2)
+  instructions String?
+  dueDate      DateTime?
+  status       String    @default("draft") // draft | published | finalized
+  createdById  String?
+  createdBy    User?     @relation("AssessmentCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  scores AssessmentScore[]
+
+  @@index([schoolId, classId])
+  @@map("assessments")
+}
+
+model AssessmentScore {
+  id           String     @id @default(cuid())
+  schoolId     String
+  assessmentId String
+  assessment   Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  studentId    String
+  student      Student    @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  score        Decimal?   @db.Decimal(8, 2)
+  level        String? // CBC performance: EE | ME | AE | BE
+  comment      String?
+  submittedAt  DateTime?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@unique([assessmentId, studentId])
+  @@map("assessment_scores")
+}
+
+// ─── Per-school M-Pesa (fee collection) ───
+// Each school holds its own Daraja credentials (encrypted), separate from the
+// platform's subscription billing. Parent STK pushes reconcile here.
+
+model SchoolPaymentConfig {
+  id              String   @id @default(cuid())
+  schoolId        String   @unique
+  school          School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  provider        String   @default("daraja")
+  environment     String   @default("sandbox")
+  credentialsEnc  String // encrypted JSON: consumerKey, consumerSecret, shortcode, passkey
+  active          Boolean  @default(true)
+  lastVerifiedAt  DateTime?
+  lastError       String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("school_payment_configs")
+}
+
 // A teacher's assignment: which class they teach, what learning area, and in
 // what role. One teacher can hold many (class teacher + subject teacher).
 // All teacher scoping (classes, students, messages) resolves through this.
@@ -559,7 +653,7 @@ model TeacherAssignment {
   role         String   @default("subject_teacher") // class_teacher | subject_teacher
   createdAt    DateTime @default(now())
 
-  @@unique([teacherId, classId, learningArea])
+  @@index([teacherId, classId])
   @@index([schoolId, classId])
   @@map("teacher_assignments")
 }

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { prisma } from "@mtanda/database";
 import { requireParentActor } from "@/lib/auth/tenant-actor";
+import { attendanceSummary } from "@/lib/academics/service";
 import { parentChildren, childName, fmtKES } from "@/lib/parent/service";
 
 export const dynamic = "force-dynamic";
@@ -32,7 +33,7 @@ export default async function ParentChildPage({
     );
   }
 
-  const [invoices, payments] = await Promise.all([
+  const [invoices, payments, attendance] = await Promise.all([
     prisma.invoice.findMany({
       where: { schoolId: parent.schoolId, studentId: child.studentId },
       orderBy: { createdAt: "desc" },
@@ -43,6 +44,7 @@ export default async function ParentChildPage({
       orderBy: { createdAt: "desc" },
       take: 50,
     }),
+    attendanceSummary(parent.schoolId, child.studentId),
   ]);
 
   return (
@@ -71,6 +73,38 @@ export default async function ParentChildPage({
           <span className="v">{fmtKES(child.outstanding)}</span>
         </div>
         <Link className="dash-link" href="/parent/fees">Full fee details →</Link>
+      </div>
+
+      <div className="parent-card">
+        <h2>Attendance</h2>
+        <div className="dash-row">
+          <span className="k">Present / Late / Absent</span>
+          <span className="v">
+            {attendance.present} / {attendance.late} / {attendance.absent}
+          </span>
+        </div>
+        <div className="dash-row">
+          <span className="k">Rate</span>
+          <span className="v">
+            {attendance.rate !== null ? `${attendance.rate}%` : "No records yet"}
+          </span>
+        </div>
+      </div>
+
+      <div className="parent-card">
+        <h2>School work</h2>
+        <div className="parent-actions">
+          <Link className="parent-action" href="/parent/results">📊 Results</Link>
+          <Link className="parent-action" href="/parent/assignments">📝 Assignments</Link>
+        </div>
+        <div style={{ marginTop: "0.7rem" }}>
+          <Link
+            className="parent-action"
+            href={`/parent/report/${encodeURIComponent(child.admissionNo)}`}
+          >
+            📄 Report card
+          </Link>
+        </div>
       </div>
 
       <div className="parent-card">

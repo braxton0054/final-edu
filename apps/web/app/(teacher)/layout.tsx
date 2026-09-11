@@ -53,6 +53,9 @@ export default async function TeacherLayout({
               items: [
                 { href: "/teacher/classes", label: "My Classes" },
                 { href: "/teacher/students", label: "Students" },
+                { href: "/teacher/attendance", label: "Attendance" },
+                { href: "/teacher/assessments", label: "Assessments" },
+                { href: "/teacher/results", label: "Results" },
               ],
             },
             {

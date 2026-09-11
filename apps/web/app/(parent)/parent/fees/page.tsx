@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
+import { prisma } from "@mtanda/database";
 import { requireParentActor } from "@/lib/auth/tenant-actor";
 import { parentChildren, childName, fmtKES } from "@/lib/parent/service";
+import FeePayForm from "../../../components/FeePayForm";
 
 export const dynamic = "force-dynamic";
 
@@ -12,7 +14,10 @@ export default async function ParentFeesPage() {
   if (!parent.ok) {
     redirect("/login?next=/parent/fees");
   }
-  const children = await parentChildren(parent.schoolId, parent.userId);
+  const [children, user] = await Promise.all([
+    parentChildren(parent.schoolId, parent.userId),
+    prisma.user.findUnique({ where: { id: parent.userId } }),
+  ]);
 
   const totalOutstanding = children.reduce((s, c) => s + c.outstanding, 0);
   const totalPaid = children.reduce((s, c) => s + c.paid, 0);
@@ -51,6 +56,14 @@ export default async function ParentFeesPage() {
             <span className="k">Balance</span>
             <span className="v">{fmtKES(c.outstanding)}</span>
           </div>
+          {c.outstanding > 0 && (
+            <FeePayForm
+              studentId={c.studentId}
+              studentName={childName(c)}
+              outstanding={c.outstanding}
+              defaultPhone={user?.phone ?? ""}
+            />
+          )}
         </div>
       ))}
 
