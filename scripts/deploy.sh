@@ -13,7 +13,18 @@ pnpm install --frozen-lockfile
 echo "==> Internal services: Evolution API (WhatsApp, loopback-only)"
 # Same deployment, no second VPS/domain: Evolution runs as a container bound
 # to 127.0.0.1:8080 and is only ever called by the SaaS backend.
-docker compose -f docker-compose.prod.yml up -d evolution
+# Non-fatal by design: WhatsApp is additive and the app degrades gracefully
+# ("not configured" errors) when Evolution is down, so a WhatsApp problem
+# must never block the SaaS deploy itself.
+if command -v docker >/dev/null 2>&1 && docker compose version >/dev/null 2>&1; then
+  if docker compose -f docker-compose.prod.yml up -d evolution; then
+    echo "Evolution API container is up."
+  else
+    echo "WARNING: Evolution API failed to start — SaaS deploy continues without WhatsApp."
+  fi
+else
+  echo "WARNING: docker compose not found — skipping Evolution API (SaaS deploy continues without WhatsApp)."
+fi
 
 echo "==> Database: generate + migrate"
 set -a

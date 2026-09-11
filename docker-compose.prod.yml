@@ -9,17 +9,20 @@
 #   VPS itself (where the SaaS backend calls it) but never from the internet.
 # - There is no second public domain and no second VPS. `docker compose` is run
 #   by the same deploy script that ships the SaaS, so one push deploys both.
-# - Evolution reaches the host's postgres/redis via host.docker.internal
-#   (override with EVOLUTION_DB_URI / EVOLUTION_REDIS_URI if yours differ).
-#   Make sure postgres accepts connections from the docker bridge network
-#   (listen_addresses + pg_hba), or point the URIs at a reachable address.
+# - The container talks back to the VPS host via host.docker.internal
+#   (postgres/redis AND the Next.js webhook). Addresses like 127.0.0.1 inside
+#   the container mean the container itself — never use them for host services.
 # - Evolution gets its own `evolution` database. Create it once on the host:
 #     psql "$DATABASE_URL" -c "CREATE DATABASE evolution;"
+# - Make sure postgres accepts connections from the docker bridge network
+#   (listen_addresses + pg_hba), or point EVOLUTION_DB_URI at a reachable
+#   address.
 
 services:
   evolution:
     image: atendai/evolution-api:latest # pin to a tested v2 release, e.g. v2.2.x
     extra_hosts:
+      # Resolves to the VPS host from inside the container (Linux-safe).
       - "host.docker.internal:host-gateway"
     environment:
       SERVER_TYPE: http
@@ -42,7 +45,9 @@ services:
       - "127.0.0.1:8080:8080"
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/ >/dev/null 2>&1 || exit 1"]
+      # Node image has no wget/curl — probe with node itself, including the
+      # API key so a healthy status proves auth works, not just the port.
+      test: ["CMD-SHELL", "node -e \"fetch('http://127.0.0.1:8080/instance/fetchInstances',{headers:{apikey:process.env.AUTHENTICATION_API_KEY}}).then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""]
       interval: 30s
       timeout: 5s
       retries: 3

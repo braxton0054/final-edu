@@ -23,11 +23,15 @@ services:
   # enforced one level up: each school gets its own Evolution *instance*
   # (created by the SaaS backend), never its own server. The port is bound to
   # loopback so it is reachable from this machine but never from the internet.
+  # host.docker.internal lets the container call back to a Next.js running on
+  # the host (EVOLUTION_WEBHOOK_URL=http://host.docker.internal:3000).
   evolution:
     image: atendai/evolution-api:latest # pin to a tested v2 release for prod
     depends_on:
       - postgres
       - redis
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     environment:
       SERVER_TYPE: http
       SERVER_PORT: "8080"

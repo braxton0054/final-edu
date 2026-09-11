@@ -23,13 +23,15 @@ export function evolutionConfigured(): boolean {
 }
 
 // Public URL the Evolution container should call back to reach this Next.js
-// app. Defaults to the internal app address so it never needs a public domain
-// of its own. Overridable for setups where Evolution and web are separate hosts.
+// app. From inside the container, 127.0.0.1 means the container itself, so
+// the host is always addressed via host.docker.internal (wired in both
+// compose files). The port follows this process's PORT (dev :3000, VPS
+// systemd :8093); set EVOLUTION_WEBHOOK_URL explicitly to override.
 export function webhookBaseUrl(): string {
-  return (
-    process.env.EVOLUTION_WEBHOOK_URL?.trim().replace(/\/+$/, "") ||
-    "http://web:3000"
-  );
+  const fromEnv = process.env.EVOLUTION_WEBHOOK_URL?.trim().replace(/\/+$/, "");
+  if (fromEnv) return fromEnv;
+  const port = process.env.PORT?.trim() || "3000";
+  return `http://host.docker.internal:${port}`;
 }
 
 // Webhook endpoint Evolution calls. Carries the shared secret as a query
