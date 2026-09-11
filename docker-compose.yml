@@ -26,7 +26,7 @@ services:
   # host.docker.internal lets the container call back to a Next.js running on
   # the host (EVOLUTION_WEBHOOK_URL=http://host.docker.internal:3000).
   evolution:
-    image: atendai/evolution-api:latest # pin to a tested v2 release for prod
+    image: evoapicloud/evolution-api:latest # v2 line; pin to a tested tag for stability
     depends_on:
       - postgres
       - redis
