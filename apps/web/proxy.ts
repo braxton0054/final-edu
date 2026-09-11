@@ -120,7 +120,11 @@ export default async function proxy(request: NextRequest) {
 
   if (path === "/login" && session) {
     const target =
-      session.userType === "PLATFORM_ADMIN" ? "/admin/dashboard" : "/dashboard";
+      session.userType === "PLATFORM_ADMIN"
+        ? "/admin/dashboard"
+        : session.userType === "PARENT"
+          ? "/parent/inbox"
+          : "/dashboard";
     return NextResponse.redirect(new URL(target, request.url));
   }
 

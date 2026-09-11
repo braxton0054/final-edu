@@ -16,6 +16,7 @@ packages/
   */          Reserved packages (auth, payments, email, ...) — not implemented
 scripts/      deploy.sh, health-check.ts
 .github/      CI, deploy, and trial-lifecycle workflows
+docs/         whatsapp.md, messaging.md
 ```
 
 The application currently lives almost entirely in `apps/web` and
@@ -78,3 +79,11 @@ WhatsApp is a native feature, not a separate product. Each school gets its own
 internal Evolution instance, managed from **Settings → WhatsApp** (connect, QR
 scan, status, disconnect, notification toggles) and monitored in
 **Super Admin → WhatsApp**. Full details: [`docs/whatsapp.md`](docs/whatsapp.md).
+
+## In-app messaging
+
+Staff write to parents (whole school, a class, or specific families) from
+**Messages**; parents read and reply in the **Parent Portal → Inbox**.
+Parent logins are created by the school under **Parents**. The inbox is the
+system of record — other channels fan out from it. Details:
+[`docs/messaging.md`](docs/messaging.md).

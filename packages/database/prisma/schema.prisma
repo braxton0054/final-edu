@@ -166,6 +166,8 @@ model School {
   platformPayments PlatformPayment[]
   verificationTokens EmailVerificationToken[]
   whatsappConnections WhatsAppConnection[]
+  conversations Conversation[]
+  studentGuardians StudentGuardian[]
 
   @@map("schools")
 }
@@ -185,6 +187,11 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
+  createdConversations Conversation[] @relation("ConversationCreator")
+  conversationMemberships ConversationMember[]
+  sentMessages ConversationMessage[] @relation("MessageSender")
+  guardianships StudentGuardian[] @relation("GuardianParent")
+
   @@unique([schoolId, email])
   @@map("users")
 }
@@ -202,6 +209,7 @@ model Student {
 
   invoices Invoice[]
   payments Payment[]
+  guardians StudentGuardian[]
 
   @@unique([schoolId, admissionNo])
   @@map("students")
@@ -460,6 +468,78 @@ model PlatformAnnouncement {
   createdAt   DateTime @default(now())
 
   @@map("platform_announcements")
+}
+
+// ─── In-app communication channel ───
+// The platform's own messaging: school staff write to audiences (all parents,
+// a class, specific guardians); parents read and reply in their inbox. This
+// is the system of record — WhatsApp/email are delivery channels on top.
+// Every row carries schoolId so tenants never see each other's threads.
+
+model Conversation {
+  id            String   @id @default(cuid())
+  schoolId      String
+  school        School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  title         String
+  audience      String   @default("custom") // all_parents | class | users
+  audienceRef   String? // classId when audience = class
+  createdById   String?
+  createdBy     User?    @relation("ConversationCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  lastMessageAt DateTime @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  members  ConversationMember[]
+  messages ConversationMessage[]
+
+  @@index([schoolId, lastMessageAt])
+  @@map("conversations")
+}
+
+model ConversationMember {
+  id             String   @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lastReadAt     DateTime @default(now())
+  createdAt      DateTime @default(now())
+
+  @@unique([conversationId, userId])
+  @@map("conversation_members")
+}
+
+model ConversationMessage {
+  id             String   @id @default(cuid())
+  schoolId       String
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId       String
+  sender         User     @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  body           String
+  createdAt      DateTime @default(now())
+
+  @@index([conversationId, createdAt])
+  @@map("conversation_messages")
+}
+
+// Links a parent login to their children. Audience targeting (whole school,
+// a class, specific guardians) resolves through this table.
+model StudentGuardian {
+  id         String   @id @default(cuid())
+  schoolId   String
+  school     School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  studentId  String
+  student    Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  parentId   String?
+  parent     User?    @relation("GuardianParent", fields: [parentId], references: [id], onDelete: SetNull)
+  parentName String?
+  relation   String? // father | mother | guardian | ...
+  createdAt  DateTime @default(now())
+
+  @@index([schoolId, studentId])
+  @@index([parentId])
+  @@map("student_guardians")
 }
 
 // ─── WhatsApp (Evolution API) — one instance per school ───

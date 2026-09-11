@@ -1,11 +1,17 @@
 // ─── Notification layer ───
 // Feature modules (fees, results, assignments, …) call `notify()` with a
-// typed event. This layer resolves the recipient, checks the school's
-// preferences, renders a message, and hands delivery to a channel provider.
-// Evolution API is only ever touched by lib/whatsapp — never from here.
+// typed event. This layer resolves the audience, checks the school's
+// preferences, and hands delivery to channels. The in-app inbox is the
+// primary channel (system of record); WhatsApp stays available as a delivery
+// channel for later.
 
 import { prisma } from "@mtanda/database";
 import { sendMessage as sendWhatsAppMessage } from "@/lib/whatsapp/service";
+import {
+  createConversation,
+  findParentByPhone,
+  type Audience,
+} from "@/lib/messaging/service";
 
 export type NotificationEvent =
   | "fee_invoice"
@@ -20,9 +26,12 @@ export type NotificationEvent =
 export type NotifyInput = {
   schoolId: string;
   event: NotificationEvent;
-  to: string; // recipient phone in any common format
+  to?: string; // recipient phone for the whatsapp channel
+  audience?: Audience; // recipients for the inapp channel
+  parentUserId?: string; // single-recipient inbox delivery
   data?: Record<string, string | number | undefined>;
   text?: string; // explicit body (parent_communication / custom messages)
+  channels?: Array<"inapp" | "whatsapp">; // default: ["inapp"]
 };
 
 const EVENT_TO_PREF: Record<NotificationEvent, "notifyFees" | "notifyPayments" | "notifyResults" | "notifyAnnouncements" | null> = {
@@ -84,7 +93,20 @@ export function renderNotification(input: NotifyInput): string {
 export async function notify(
   input: NotifyInput
 ): Promise<{ ok: boolean; skipped?: boolean; error?: string }> {
-  const to = input.to.trim();
+  const channels = input.channels ?? ["inapp"];
+  const text = renderNotification(input);
+
+  // In-app inbox first: always the system of record.
+  if (channels.includes("inapp")) {
+    const inapp = await deliverInApp(input, text);
+    if (!inapp.ok) return inapp;
+    // WhatsApp fan-out below is additive when requested.
+    if (!channels.includes("whatsapp")) return { ok: true };
+  }
+
+  if (!channels.includes("whatsapp")) return { ok: true, skipped: true, error: "No channel selected." };
+
+  const to = (input.to ?? "").trim();
   if (!to) return { ok: false, error: "Recipient phone number is required." };
 
   const connection = await prisma.whatsAppConnection.findUnique({
@@ -100,8 +122,60 @@ export async function notify(
     return { ok: false, skipped: true, error: `Notifications for ${input.event} are disabled.` };
   }
 
-  const text = renderNotification(input);
   return sendWhatsAppMessage(input.schoolId, to, text, input.event);
+}
+
+const EVENT_TITLES: Record<NotificationEvent, string> = {
+  fee_invoice: "Fee invoice",
+  payment_confirmation: "Payment received",
+  receipt: "Payment receipt",
+  student_registration: "Welcome",
+  result_publication: "Results published",
+  assignment: "New assignment",
+  announcement: "Announcement",
+  parent_communication: "Message from school",
+};
+
+// Inbox delivery: one conversation per notification, addressed to the given
+// audience (or a single parent). Posted as the school (no staff author).
+async function deliverInApp(
+  input: NotifyInput,
+  text: string
+): Promise<{ ok: boolean; skipped?: boolean; error?: string }> {
+  let audience: Audience;
+  if (input.parentUserId) {
+    audience = { type: "users", userIds: [input.parentUserId] };
+  } else if (input.audience) {
+    audience = input.audience;
+  } else if (input.to) {
+    const parentId = await findParentByPhone(input.schoolId, input.to);
+    if (!parentId) {
+      return { ok: false, skipped: true, error: "No parent account matches this number." };
+    }
+    audience = { type: "users", userIds: [parentId] };
+  } else {
+    return { ok: false, error: "No audience: pass parentUserId, audience, or to." };
+  }
+
+  // System-authored: find any staff account to attribute, else fail loudly.
+  const staff = await prisma.user.findFirst({
+    where: { schoolId: input.schoolId, userType: { in: ["SCHOOL_ADMIN", "STAFF"] } },
+    select: { id: true },
+  });
+  if (!staff) return { ok: false, error: "No staff account found for this school." };
+
+  try {
+    await createConversation({
+      schoolId: input.schoolId,
+      title: EVENT_TITLES[input.event],
+      audience,
+      firstMessage: text,
+      senderId: staff.id,
+    });
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Inbox delivery failed." };
+  }
 }
 
 // Batch helper for announcements (one school → many parents).

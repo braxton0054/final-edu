@@ -1,22 +1,26 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { requireParentActor } from "@/lib/auth/tenant-actor";
 
-// Tenant pages read live school data per request — never prerender.
+// Parent portal shell. Only PARENT sessions with a school attached render.
 export const dynamic = "force-dynamic";
 
-export default function TenantLayout({
+export default async function ParentLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const parent = await requireParentActor();
+  if (!parent.ok) {
+    redirect("/login?next=/parent/inbox");
+  }
+
   return (
     <div style={{ display: "flex" }}>
       <aside style={{ width: 220, borderRight: "1px solid #eee", padding: "1rem" }}>
-        <strong>School Portal</strong>
+        <strong>Parent Portal</strong>
         <nav style={{ display: "grid", gap: "0.5rem", marginTop: "1rem" }}>
-          <Link href="/dashboard">Dashboard</Link>
-          <Link href="/messages">Messages</Link>
-          <Link href="/parents">Parents</Link>
-          <Link href="/settings/whatsapp">Settings → WhatsApp</Link>
+          <Link href="/parent/inbox">Inbox</Link>
         </nav>
       </aside>
       <main style={{ flex: 1, padding: "1rem" }}>{children}</main>

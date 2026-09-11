@@ -30,7 +30,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const out = await notify({ schoolId: actor.schoolId, event, to, text });
+  const out = await notify({ schoolId: actor.schoolId, event, to, text, channels: ["whatsapp"] });
   if (!out.ok) {
     const status = out.skipped ? 409 : 502;
     return NextResponse.json({ ok: false, error: out.error }, { status });

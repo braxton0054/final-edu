@@ -36,3 +36,20 @@ export async function requireSchoolActor(): Promise<SchoolActor> {
     userType: session.userType,
   };
 }
+
+export type ParentActor =
+  | { ok: true; schoolId: string; userId: string; email: string }
+  | { ok: false; status: 401 | 403; error: string };
+
+// Requires a signed-in parent with a school attached. Staff and admins use
+// the tenant surface instead; platform admins have no school at all.
+export async function requireParentActor(): Promise<ParentActor> {
+  const session = await tenantSession();
+  if (!session) {
+    return { ok: false, status: 401, error: "Sign in to continue." };
+  }
+  if (session.userType !== "PARENT" || !session.schoolId) {
+    return { ok: false, status: 403, error: "This area is for parent accounts." };
+  }
+  return { ok: true, schoolId: session.schoolId, userId: session.userId, email: session.email };
+}

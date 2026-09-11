@@ -6,6 +6,7 @@ import { checkRateLimit, clientIp, rateLimitHeaders } from "@/lib/rate-limit";
 
 function landingFor(userType: string): string {
   if (userType === "PLATFORM_ADMIN") return "/admin/dashboard";
+  if (userType === "PARENT") return "/parent/inbox";
   return "/dashboard";
 }
 
