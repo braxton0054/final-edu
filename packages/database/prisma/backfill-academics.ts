@@ -97,9 +97,19 @@ async function main() {
       select: { classId: true, learningArea: true },
       distinct: ["classId", "learningArea"],
     });
-    const oldAssignments = await prisma.teacherAssignment.findMany({
-      where: { schoolId: school.id },
-    });
+    // Migrate legacy assignments. Raw SQL: the pre-structure table is gone on
+    // fresh databases (dropped by migration), so the generated client has no
+    // accessor for it.
+    type LegacyRow = { teacherId: string; classId: string; learningArea: string | null; role: string };
+    let oldAssignments: LegacyRow[] = [];
+    try {
+      oldAssignments = await prisma.$queryRaw<LegacyRow[]>`
+        SELECT "teacherId", "classId", "learningArea", "role"
+        FROM "teacher_assignments" WHERE "schoolId" = ${school.id}
+      `;
+    } catch {
+      oldAssignments = [];
+    }
     for (const e of evidence) {
       const loc = streamByDisplay.get(e.classId);
       const area = e.learningArea ? areaByName.get(e.learningArea.toLowerCase()) : undefined;

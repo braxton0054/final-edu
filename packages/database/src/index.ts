@@ -9,8 +9,6 @@ export * from "./trial";
 export type { WhatsAppConnection, WhatsAppMessage, WhatsAppStatus } from "@prisma/client";
 // In-app channel types (conversations, members, messages, guardians).
 export type { Conversation, ConversationMember, ConversationMessage, StudentGuardian } from "@prisma/client";
-// Teacher scoping type.
-export type { TeacherAssignment } from "@prisma/client";
 // Academics + per-school payments types.
 export type { Assessment, AssessmentScore, AttendanceRecord, SchoolPaymentConfig } from "@prisma/client";
 // Academic structure types (grade/stream/assignments/enrollment).
