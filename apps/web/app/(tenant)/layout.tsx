@@ -65,6 +65,15 @@ export default async function TenantLayout({
               ],
             },
             {
+              id: "academics",
+              label: "Academics",
+              items: [
+                { href: "/academics", label: "Grades" },
+                { href: "/academics/areas", label: "Learning Areas" },
+                { href: "/academics/assignments", label: "Assignments" },
+              ],
+            },
+            {
               id: "comms",
               label: "Communication",
               items: [{ href: "/messages", label: "Messages", badge: unread }],

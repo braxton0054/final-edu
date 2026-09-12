@@ -172,6 +172,11 @@ model School {
   assessments Assessment[]
   attendanceRecords AttendanceRecord[]
   paymentConfig SchoolPaymentConfig?
+  grades Grade[]
+  learningAreas LearningArea[]
+  teachingAssignments TeachingAssignment[]
+  classTeacherAssignments ClassTeacherAssignment[]
+  enrollments Enrollment[]
 
   @@map("schools")
 }
@@ -218,6 +223,7 @@ model Student {
   guardians StudentGuardian[]
   assessmentScores AssessmentScore[]
   attendanceRecords AttendanceRecord[]
+  enrollments Enrollment[]
 
   @@unique([schoolId, admissionNo])
   @@map("students")
@@ -235,6 +241,9 @@ model Teacher {
 
   assignments TeacherAssignment[]
 
+  teachingAssignments TeachingAssignment[]
+  classTeacherAssignments ClassTeacherAssignment[]
+
   @@map("teachers")
 }
 
@@ -245,6 +254,11 @@ model AcademicYear {
   name      String
   isCurrent Boolean  @default(false)
   createdAt DateTime @default(now())
+
+  terms Term[]
+  enrollments Enrollment[]
+  teachingAssignments TeachingAssignment[]
+  classTeacherAssignments ClassTeacherAssignment[]
 
   @@unique([schoolId, name])
   @@map("academic_years")
@@ -639,9 +653,182 @@ model SchoolPaymentConfig {
   @@map("school_payment_configs")
 }
 
-// A teacher's assignment: which class they teach, what learning area, and in
-// what role. One teacher can hold many (class teacher + subject teacher).
-// All teacher scoping (classes, students, messages) resolves through this.
+// ─── Academic structure: year → term → grade → stream ───
+// Grades are school-stable (Grade 6); streams are the student groups within
+// a grade (6A, 6B…). Student.classId mirrors the stream displayName so every
+// existing query keeps working; Enrollment is the permanent record.
+
+model Term {
+  id             String   @id @default(cuid())
+  schoolId       String
+  academicYearId String
+  academicYear   AcademicYear @relation(fields: [academicYearId], references: [id], onDelete: Cascade)
+  name           String // Term 1 | Term 2 | Term 3
+  isCurrent      Boolean  @default(false)
+  startDate      DateTime?
+  endDate        DateTime?
+  createdAt      DateTime @default(now())
+
+  teachingAssignments TeachingAssignment[]
+  classTeacherAssignments ClassTeacherAssignment[]
+
+  @@unique([academicYearId, name])
+  @@map("terms")
+}
+
+model Grade {
+  id        String   @id @default(cuid())
+  schoolId  String
+  school    School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  name      String // Grade 6
+  createdAt DateTime @default(now())
+
+  streams Stream[]
+  gradeAreas GradeLearningArea[]
+  enrollments Enrollment[]
+  teachingAssignments TeachingAssignment[]
+  classTeacherAssignments ClassTeacherAssignment[]
+
+  @@unique([schoolId, name])
+  @@map("grades")
+}
+
+model Stream {
+  id          String   @id @default(cuid())
+  schoolId    String
+  gradeId     String
+  grade       Grade    @relation(fields: [gradeId], references: [id], onDelete: Cascade)
+  name        String // A (or East — schools choose)
+  displayName String // Grade 6A — matches the classId convention
+  maxStudents Int?
+  status      String   @default("active")
+  createdAt   DateTime @default(now())
+
+  areaOverrides StreamLearningArea[]
+  enrollments Enrollment[]
+  teachingAssignments TeachingAssignment[]
+  classTeacherAssignments ClassTeacherAssignment[]
+
+  @@unique([gradeId, name])
+  @@map("streams")
+}
+
+model LearningArea {
+  id        String   @id @default(cuid())
+  schoolId  String
+  school    School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  name      String // Mathematics
+  code      String?
+  createdAt DateTime @default(now())
+
+  gradeDefaults GradeLearningArea[]
+  streamOverrides StreamLearningArea[]
+  teachingAssignments TeachingAssignment[]
+
+  @@unique([schoolId, name])
+  @@map("learning_areas")
+}
+
+// Grade-level default subjects: every stream inherits these unless overridden.
+model GradeLearningArea {
+  id             String       @id @default(cuid())
+  gradeId        String
+  grade          Grade        @relation(fields: [gradeId], references: [id], onDelete: Cascade)
+  learningAreaId String
+  learningArea   LearningArea @relation(fields: [learningAreaId], references: [id], onDelete: Cascade)
+  createdAt      DateTime     @default(now())
+
+  @@unique([gradeId, learningAreaId])
+  @@map("grade_learning_areas")
+}
+
+// Stream-level exceptions: offered=false removes a grade default,
+// offered=true adds a stream-only subject.
+model StreamLearningArea {
+  id             String       @id @default(cuid())
+  streamId       String
+  stream         Stream       @relation(fields: [streamId], references: [id], onDelete: Cascade)
+  learningAreaId String
+  learningArea   LearningArea @relation(fields: [learningAreaId], references: [id], onDelete: Cascade)
+  offered        Boolean      @default(true)
+  createdAt      DateTime     @default(now())
+
+  @@unique([streamId, learningAreaId])
+  @@map("stream_learning_areas")
+}
+
+// Who teaches what to which stream, in which year+term. One teacher holds
+// many rows (several streams, several areas) — never a single class column.
+model TeachingAssignment {
+  id             String       @id @default(cuid())
+  schoolId       String
+  school         School       @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  academicYearId String
+  academicYear   AcademicYear @relation(fields: [academicYearId], references: [id], onDelete: Cascade)
+  termId         String?
+  term           Term?        @relation(fields: [termId], references: [id], onDelete: SetNull)
+  teacherId      String
+  teacher        Teacher      @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  gradeId        String
+  grade          Grade        @relation(fields: [gradeId], references: [id], onDelete: Cascade)
+  streamId       String
+  stream         Stream       @relation(fields: [streamId], references: [id], onDelete: Cascade)
+  learningAreaId String?
+  learningArea   LearningArea? @relation(fields: [learningAreaId], references: [id], onDelete: SetNull)
+  status         String       @default("active")
+  createdAt      DateTime     @default(now())
+
+  @@index([schoolId, streamId])
+  @@index([teacherId, status])
+  @@map("teaching_assignments")
+}
+
+// Exactly one ACTIVE class teacher per stream (DB-enforced partial unique).
+// Separate from subject teaching — a class teacher need not teach the stream.
+model ClassTeacherAssignment {
+  id             String       @id @default(cuid())
+  schoolId       String
+  school         School       @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  academicYearId String
+  academicYear   AcademicYear @relation(fields: [academicYearId], references: [id], onDelete: Cascade)
+  termId         String?
+  term           Term?        @relation(fields: [termId], references: [id], onDelete: SetNull)
+  teacherId      String
+  teacher        Teacher      @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  gradeId        String
+  grade          Grade        @relation(fields: [gradeId], references: [id], onDelete: Cascade)
+  streamId       String
+  stream         Stream       @relation(fields: [streamId], references: [id], onDelete: Cascade)
+  status         String       @default("active")
+  createdAt      DateTime     @default(now())
+
+  @@map("class_teacher_assignments")
+}
+
+// Permanent placement record: promotions create a NEW row, never overwrite.
+// Student.classId mirrors the current stream displayName for queries.
+model Enrollment {
+  id             String   @id @default(cuid())
+  schoolId       String
+  school         School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  studentId      String
+  student        Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  academicYearId String
+  academicYear   AcademicYear @relation(fields: [academicYearId], references: [id], onDelete: Cascade)
+  gradeId        String
+  grade          Grade    @relation(fields: [gradeId], references: [id], onDelete: Cascade)
+  streamId       String
+  stream         Stream   @relation(fields: [streamId], references: [id], onDelete: Cascade)
+  status         String   @default("active") // active | completed | transferred
+  createdAt      DateTime @default(now())
+
+  @@index([studentId, status])
+  @@index([schoolId, streamId])
+  @@map("enrollments")
+}
+
+// Legacy per-teacher class links — superseded by TeachingAssignment +
+// ClassTeacherAssignment. Kept until the backfill migrates its rows.
 model TeacherAssignment {
   id           String   @id @default(cuid())
   schoolId     String

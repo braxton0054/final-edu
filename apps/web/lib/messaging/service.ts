@@ -1,5 +1,6 @@
 import { prisma } from "@mtanda/database";
 import { hashPassword } from "@/lib/auth/passwords";
+import { richTeacherScope } from "@/lib/academics/structure";
 
 // ─── In-app communication channel ───
 // Tenant-scoped conversations: staff write to audiences, parents read and
@@ -352,36 +353,26 @@ export type TeacherScope = {
   isClassTeacher: boolean;
 };
 
+// Resolved from managed Teaching/ClassTeacher assignments (see
+// lib/academics/structure). Same shape as before so all consumers keep
+// working; extra grade/stream ids ride along where available.
 export async function teacherScope(
   schoolId: string,
   userId: string
 ): Promise<TeacherScope | null> {
-  const teacher = await prisma.teacher.findFirst({
-    where: { schoolId, userId },
-    include: { assignments: true },
-  });
-  if (!teacher) return null;
-  const byClass = new Map<string, { learningAreas: string[]; roles: string[] }>();
-  for (const a of teacher.assignments) {
-    const entry = byClass.get(a.classId) ?? { learningAreas: [], roles: [] };
-    if (a.learningArea && !entry.learningAreas.includes(a.learningArea)) {
-      entry.learningAreas.push(a.learningArea);
-    }
-    if (!entry.roles.includes(a.role)) entry.roles.push(a.role);
-    byClass.set(a.classId, entry);
-  }
-  const classes = Array.from(byClass.entries()).map(([classId, v]) => ({
-    classId,
-    learningAreas: v.learningAreas,
-    roles: v.roles,
-  }));
+  const rich = await richTeacherScope(schoolId, userId);
+  if (!rich) return null;
   return {
-    teacherId: teacher.id,
-    firstName: teacher.firstName,
-    lastName: teacher.lastName,
-    classes,
-    classIds: classes.map((c) => c.classId),
-    isClassTeacher: teacher.assignments.some((a) => a.role === "class_teacher"),
+    teacherId: rich.teacherId,
+    firstName: rich.firstName,
+    lastName: rich.lastName,
+    classes: rich.classes.map((c) => ({
+      classId: c.classId,
+      learningAreas: c.learningAreas,
+      roles: c.roles,
+    })),
+    classIds: rich.classIds,
+    isClassTeacher: rich.isClassTeacher,
   };
 }
 
@@ -390,51 +381,6 @@ export async function teacherStudents(schoolId: string, classIds: string[]) {
   return prisma.student.findMany({
     where: { schoolId, classId: { in: classIds } },
     orderBy: [{ classId: "asc" }, { firstName: "asc" }],
-    take: 500,
-  });
-}
-
-export async function upsertAssignment(opts: {
-  schoolId: string;
-  teacherId: string;
-  classId: string;
-  learningArea?: string;
-  role: string;
-}) {
-  const teacher = await prisma.teacher.findFirst({
-    where: { id: opts.teacherId, schoolId: opts.schoolId },
-  });
-  if (!teacher) throw new Error("Teacher not found in this school.");
-  const role = opts.role === "class_teacher" ? "class_teacher" : "subject_teacher";
-  const classId = opts.classId.trim();
-  const learningArea = opts.learningArea?.trim() || null;
-  if (!classId) throw new Error("A class is required.");
-  // NULL learningArea never matches a unique row in Postgres, so handle it
-  // with an explicit find instead of upsert.
-  const existing = await prisma.teacherAssignment.findFirst({
-    where: { teacherId: opts.teacherId, classId, learningArea },
-  });
-  if (existing) {
-    return prisma.teacherAssignment.update({ where: { id: existing.id }, data: { role } });
-  }
-  return prisma.teacherAssignment.create({
-    data: { schoolId: opts.schoolId, teacherId: opts.teacherId, classId, learningArea, role },
-  });
-}
-
-export async function removeAssignment(schoolId: string, assignmentId: string) {
-  const row = await prisma.teacherAssignment.findFirst({
-    where: { id: assignmentId, schoolId },
-  });
-  if (!row) throw new Error("Assignment not found.");
-  await prisma.teacherAssignment.delete({ where: { id: assignmentId } });
-}
-
-export async function listAssignments(schoolId: string) {
-  return prisma.teacherAssignment.findMany({
-    where: { schoolId },
-    orderBy: [{ classId: "asc" }, { learningArea: "asc" }],
-    include: { teacher: { select: { id: true, firstName: true, lastName: true } } },
     take: 500,
   });
 }

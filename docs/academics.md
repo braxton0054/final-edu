@@ -1,5 +1,28 @@
 # Academics + school fee payments
 
+## Academic structure (year → term → grade → stream)
+
+Grades are school-stable (`Grade 6`); streams are the student groups inside a
+grade (`6A`, or `East` — schools choose). Learning areas live at school level;
+grades carry default areas that every stream inherits, with per-stream
+exceptions (offer/remove). `TeachingAssignment` binds teacher + grade + stream
++ area + year + term; `ClassTeacherAssignment` is separate with exactly one
+ACTIVE holder per stream (DB partial unique). `Student.classId` mirrors the
+stream displayName so existing queries work; `Enrollment` is the permanent
+record — moves close the old row and open a new one, never overwrite.
+
+Backfill (`packages/database/prisma/backfill-academics.ts`, idempotent):
+parses existing classIds (`Grade 6A` → grade + stream), seeds standard CBC
+areas, derives grade defaults from assessment evidence, migrates legacy
+assignments, enrolls every student. Legacy `teacher_assignments` drops after.
+
+- Staff UI: Academics → Grades (streams, class teachers, area defaults,
+  exceptions), Learning Areas, Teaching Assignments
+- `GET/POST /api/academics/grades`, `POST/PATCH /api/academics/streams`,
+  `GET/POST/DELETE /api/academics/areas`, `GET/POST /api/academics/grade-areas`,
+  `GET/POST/DELETE /api/academics/assignments`,
+  `POST/DELETE /api/academics/class-teachers`, `POST /api/academics/enroll`
+
 ## Attendance
 
 `AttendanceRecord` (student × day, unique) with statuses

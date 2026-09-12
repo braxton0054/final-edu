@@ -13,3 +13,16 @@ export type { Conversation, ConversationMember, ConversationMessage, StudentGuar
 export type { TeacherAssignment } from "@prisma/client";
 // Academics + per-school payments types.
 export type { Assessment, AssessmentScore, AttendanceRecord, SchoolPaymentConfig } from "@prisma/client";
+// Academic structure types (grade/stream/assignments/enrollment).
+export type {
+  AcademicYear,
+  Term,
+  Grade,
+  Stream,
+  LearningArea,
+  GradeLearningArea,
+  StreamLearningArea,
+  TeachingAssignment,
+  ClassTeacherAssignment,
+  Enrollment,
+} from "@prisma/client";

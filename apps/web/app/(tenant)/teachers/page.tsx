@@ -1,8 +1,7 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { prisma } from "@mtanda/database";
 import { requireSchoolActor } from "@/lib/auth/tenant-actor";
-import { distinctClassIds } from "@/lib/messaging/service";
-import TeacherAssignmentManager from "./TeacherAssignmentManager";
 import TeacherLoginManager from "./TeacherLoginManager";
 
 export const dynamic = "force-dynamic";
@@ -14,19 +13,19 @@ export default async function TeachersPage() {
     redirect("/login?next=/teachers");
   }
 
-  const [teachers, classIds] = await Promise.all([
-    prisma.teacher.findMany({
-      where: { schoolId: staff.schoolId },
-      orderBy: { createdAt: "desc" },
-      take: 200,
-    }),
-    distinctClassIds(staff.schoolId),
-  ]);
+  const teachers = await prisma.teacher.findMany({
+    where: { schoolId: staff.schoolId },
+    orderBy: { createdAt: "desc" },
+    take: 200,
+  });
 
   return (
     <div>
       <h1 className="dash-greet">Teachers</h1>
-      <p className="dash-sub">{teachers.length} on record</p>
+      <p className="dash-sub">
+        {teachers.length} on record · assign classes under{" "}
+        <Link href="/academics/assignments">Academics → Assignments</Link>
+      </p>
       <div className="dash-panel">
         {teachers.length === 0 ? (
           <p className="dash-muted">No teachers yet.</p>
@@ -53,10 +52,6 @@ export default async function TeachersPage() {
           </table>
         )}
       </div>
-      <TeacherAssignmentManager
-        teachers={teachers.map((t) => ({ id: t.id, firstName: t.firstName, lastName: t.lastName }))}
-        classIds={classIds}
-      />
       <TeacherLoginManager
         teachers={teachers.map((t) => ({
           id: t.id,
